@@ -1,0 +1,55 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-12 17:10:28.327680",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_qggt",
+  "state",
+  "name_en",
+  "name_ar"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_qggt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Link",
+   "label": "State",
+   "options": "State"
+  },
+  {
+   "fetch_from": "state.name_en",
+   "fieldname": "name_en",
+   "fieldtype": "Data",
+   "label": "Name En",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "state.name_ar",
+   "fieldname": "name_ar",
+   "fieldtype": "Data",
+   "label": "Name Ar",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-02-12 17:12:15.670829",
+ "modified_by": "Administrator",
+ "module": "FDS App",
+ "name": "States Table",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

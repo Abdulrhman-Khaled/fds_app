@@ -1,0 +1,203 @@
+{
+ "actions": [],
+ "autoname": "autoincrement",
+ "creation": "2026-02-15 16:46:54.551694",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "order_details_section",
+  "column_break_bwrr",
+  "customer",
+  "address",
+  "customer_first_name",
+  "customer_last_name",
+  "phone_number",
+  "email",
+  "column_break_wtph",
+  "service_order",
+  "order_date",
+  "variation",
+  "data_lnrd",
+  "status",
+  "driver",
+  "services_details_section",
+  "services",
+  "service",
+  "total_price",
+  "payment_status",
+  "payment_method",
+  "order_notes_section",
+  "note",
+  "column_break_dokc",
+  "driver_note"
+ ],
+ "fields": [
+  {
+   "fieldname": "order_details_section",
+   "fieldtype": "Section Break",
+   "label": "Order Details"
+  },
+  {
+   "fieldname": "column_break_bwrr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Link",
+   "label": "Address",
+   "options": "Customer Address"
+  },
+  {
+   "fetch_from": "address.first_name",
+   "fieldname": "customer_first_name",
+   "fieldtype": "Data",
+   "label": "Customer First Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "address.last_name",
+   "fieldname": "customer_last_name",
+   "fieldtype": "Data",
+   "label": "Customer Last Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "phone_number",
+   "fieldtype": "Data",
+   "label": "Phone Number"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "column_break_wtph",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "service_order",
+   "fieldtype": "Check",
+   "label": "Service Order"
+  },
+  {
+   "fieldname": "order_date",
+   "fieldtype": "Date",
+   "label": "Order Receive Date"
+  },
+  {
+   "depends_on": "eval:doc.service_order == 1",
+   "fieldname": "variation",
+   "fieldtype": "Link",
+   "label": "Variation",
+   "options": "Variations"
+  },
+  {
+   "depends_on": "eval:doc.service_order == 1",
+   "fieldname": "data_lnrd",
+   "fieldtype": "Data",
+   "label": "Time Slot"
+  },
+  {
+   "fieldname": "services_details_section",
+   "fieldtype": "Section Break",
+   "label": "Order Services Details"
+  },
+  {
+   "depends_on": "eval:doc.service_order == 0",
+   "fieldname": "services",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Sales Invoice Item"
+  },
+  {
+   "depends_on": "eval:doc.service_order == 1",
+   "fieldname": "service",
+   "fieldtype": "Link",
+   "label": "Service",
+   "options": "Item"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "confirmed\ncompleted\ncancelled"
+  },
+  {
+   "fieldname": "total_price",
+   "fieldtype": "Float",
+   "label": "Total Price"
+  },
+  {
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "label": "Payment Status",
+   "options": "paid\nunpaid"
+  },
+  {
+   "fieldname": "order_notes_section",
+   "fieldtype": "Section Break",
+   "label": "Order Notes"
+  },
+  {
+   "fieldname": "note",
+   "fieldtype": "Long Text",
+   "label": "Note"
+  },
+  {
+   "fieldname": "column_break_dokc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "driver_note",
+   "fieldtype": "Long Text",
+   "label": "Driver Note"
+  },
+  {
+   "fieldname": "payment_method",
+   "fieldtype": "Data",
+   "label": "Payment Method"
+  },
+  {
+   "fieldname": "driver",
+   "fieldtype": "Link",
+   "label": "Driver",
+   "options": "Drivers"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-15 16:59:11.662867",
+ "modified_by": "Administrator",
+ "module": "FDS App",
+ "name": "Order",
+ "naming_rule": "Autoincrement",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
