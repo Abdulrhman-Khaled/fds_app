@@ -191,8 +191,10 @@ def register(**kwargs):
         frappe.response["data"] = {}
 
 def _register_user_to_dict(user):
+    customer = frappe.get_doc("Customer", {"custom_user": user})
     return {
         "id": user.name,
+        "customer_id": customer.name,
         "first_name": user.first_name,
         "last_name": user.last_name,
         "email": user.email,
