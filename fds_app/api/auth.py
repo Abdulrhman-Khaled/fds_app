@@ -191,10 +191,14 @@ def register(**kwargs):
         frappe.response["data"] = {}
 
 def _register_user_to_dict(user):
-    customer = frappe.get_doc("Customer", {"custom_user": user})
+    customer_name = frappe.db.get_value(
+        "Customer",
+        {"custom_user": user.name},
+        "name"
+    )
     return {
         "id": user.name,
-        "customer_id": customer.name,
+        "customer_id": customer_name or "",
         "first_name": user.first_name,
         "last_name": user.last_name,
         "email": user.email,
@@ -259,11 +263,15 @@ def _login_user_to_dict(user):
     if user.user_image:
         profile_image = frappe.utils.get_url(user.user_image)
 
-    customer = frappe.get_doc("Customer", {"custom_user": user})
+    customer_name = frappe.db.get_value(
+        "Customer",
+        {"custom_user": user.name},
+        "name"
+    )
 
     return {
         "id": user.email,
-        "customer_id": customer.name or "",
+        "customer_id": customer_name or "",
         "first_name": user.first_name,
         "last_name": user.last_name,
         "mobile": user.mobile_no or "",
@@ -363,11 +371,15 @@ def _user_detail_to_dict(user):
         "file_url"
     )
 
-    customer = frappe.get_doc("Customer", {"custom_user": user})
+    customer_name = frappe.db.get_value(
+        "Customer",
+        {"custom_user": user.name},
+        "name"
+    )
 
     return {
         "id": user.name,
-        "customer_id": customer.name or "",
+        "customer_id": customer_name or "",
         "first_name": user.first_name or "",
         "last_name": user.last_name or "",
         "username": getattr(user, "username", "") or "",
@@ -421,7 +433,11 @@ def update_profile(**kwargs):
         user.full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
         user.save(ignore_permissions=True)
 
-        customer = frappe.get_doc("Customer", {"custom_user": user})
+        customer_name = frappe.db.get_value(
+        "Customer",
+        {"custom_user": user.name},
+        "name"
+    )
         if "first_name" in data and "last_name" in data:
             customer.customer_name = data.get("first_name") + " " + data.get("last_name")
             customer.save(ignore_permissions=True)
@@ -444,10 +460,14 @@ def update_profile(**kwargs):
         })
 
 def _user_to_dict(user):
-    customer = frappe.get_doc("Customer", {"custom_user": user})
+    customer_name = frappe.db.get_value(
+        "Customer",
+        {"custom_user": user.name},
+        "name"
+    )
     return {
         "id": user.name,
-        "customer_id": customer.name or "",
+        "customer_id": customer_name or "",
         "first_name": user.first_name or "",
         "last_name": user.last_name or "",
         "email": user.email or "",
