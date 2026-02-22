@@ -25,7 +25,7 @@ def flatten(lis):
 @frappe.whitelist(allow_guest=True)
 def get_regions(**kwargs):
     try:
-        regions = frappe.get_all("Region", filters={"disable": 0}, fields=["name_en", "name_ar"])
+        regions = frappe.get_all("Region", filters={"disable": 0}, fields=["*"])
 
         data = []
         for r in regions:
