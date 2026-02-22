@@ -147,6 +147,7 @@ def update_customer_address(
     last_name=None,
     region=None,
     state=None,
+    customer=None,
     address=None,
     primary=None,
     lat_lng=None
