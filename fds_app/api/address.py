@@ -210,7 +210,37 @@ def delete_customer_address(address_id):
             frappe.response["data"] = []
             return
 
+        address_doc = frappe.get_doc("Customer Address", address_id)
+        customer_name = address_doc.customer
+        was_primary = address_doc.primary
+
+        customer_doc = frappe.get_doc("Customer", customer_name)
+
+        customer_doc.custom_address = [
+            row for row in customer_doc.custom_address
+            if row.customer_address != address_id
+        ]
+
+        customer_doc.save(ignore_permissions=True)
+
         frappe.delete_doc("Customer Address", address_id, ignore_permissions=True)
+
+        if was_primary:
+            another_address = frappe.get_all(
+                "Customer Address",
+                filters={"customer": customer_name},
+                fields=["name"],
+                limit=1
+            )
+
+            if another_address:
+                frappe.db.set_value(
+                    "Customer Address",
+                    another_address[0].name,
+                    "primary",
+                    1
+                )
+
         frappe.db.commit()
 
         frappe.response["status"] = True
@@ -218,7 +248,10 @@ def delete_customer_address(address_id):
         frappe.response["data"] = []
 
     except Exception as e:
-        frappe.log_error(message=frappe.get_traceback(), title="Delete Customer Address Error")
+        frappe.log_error(
+            message=frappe.get_traceback(),
+            title="Delete Customer Address Error"
+        )
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = []
