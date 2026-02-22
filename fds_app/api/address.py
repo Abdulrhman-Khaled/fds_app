@@ -218,7 +218,7 @@ def delete_customer_address(address_id):
 
         customer_doc.custom_address = [
             row for row in customer_doc.custom_address
-            if row.customer_address != address_id
+            if row.address != address_id
         ]
 
         customer_doc.save(ignore_permissions=True)
