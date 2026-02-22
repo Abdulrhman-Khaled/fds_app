@@ -63,7 +63,7 @@ def get_states(region=None):
                 "id": s.name,
                 "name_en": s.name_en,
                 "name_ar": s.name_ar,
-                "region": s.region
+                "region": s.region.name
             }
             data.append(state_data)
 
