@@ -63,7 +63,7 @@ def get_states(region=None):
                 "id": s.name,
                 "name_en": s.name_en,
                 "name_ar": s.name_ar,
-                "region": s.region.name
+                "region": s.region
             }
             data.append(state_data)
 
@@ -73,6 +73,138 @@ def get_states(region=None):
 
     except Exception as e:
         frappe.log_error(message=frappe.get_traceback(), title="States List Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []
+
+@frappe.whitelist(allow_guest=True)
+def create_customer_address(
+    first_name,
+    last_name,
+    region,
+    state,
+    customer,
+    address,
+    primary=0,
+    lat_lng=None
+):
+    try:
+        if not customer:
+            frappe.response["status"] = False
+            frappe.response["message"] = "Customer is required"
+            frappe.response["data"] = []
+            return
+
+        # If primary = 1 → remove primary from other addresses
+        if cint(primary) == 1:
+            frappe.db.sql("""
+                UPDATE `tabCustomer Address`
+                SET `primary` = 0
+                WHERE customer = %s
+            """, (customer,))
+
+        doc = frappe.get_doc({
+            "doctype": "Customer Address",
+            "first_name": first_name,
+            "last_name": last_name,
+            "region": region,
+            "state": state,
+            "customer": customer,
+            "address": address,
+            "primary": primary,
+            "lat_lng": lat_lng
+        })
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Customer Address Created Successfully"
+        frappe.response["data"] = {
+            "id": doc.name
+        }
+
+    except Exception as e:
+        frappe.log_error(message=frappe.get_traceback(), title="Create Customer Address Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []
+
+@frappe.whitelist(allow_guest=True)
+def update_customer_address(
+    address_id,
+    first_name=None,
+    last_name=None,
+    region=None,
+    state=None,
+    address=None,
+    primary=None,
+    lat_lng=None
+):
+    try:
+        if not address_id:
+            frappe.response["status"] = False
+            frappe.response["message"] = "Address ID is required"
+            frappe.response["data"] = []
+            return
+
+        doc = frappe.get_doc("Customer Address", address_id)
+
+        if primary is not None and cint(primary) == 1:
+            frappe.db.sql("""
+                UPDATE `tabCustomer Address`
+                SET `primary` = 0
+                WHERE customer = %s
+            """, (doc.customer,))
+
+        if first_name is not None:
+            doc.first_name = first_name
+        if last_name is not None:
+            doc.last_name = last_name
+        if region is not None:
+            doc.region = region
+        if state is not None:
+            doc.state = state
+        if address is not None:
+            doc.address = address
+        if primary is not None:
+            doc.primary = primary
+        if lat_lng is not None:
+            doc.lat_lng = lat_lng
+
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Customer Address Updated Successfully"
+        frappe.response["data"] = {
+            "id": doc.name
+        }
+
+    except Exception as e:
+        frappe.log_error(message=frappe.get_traceback(), title="Update Customer Address Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []
+
+@frappe.whitelist(allow_guest=True)
+def delete_customer_address(address_id):
+    try:
+        if not address_id:
+            frappe.response["status"] = False
+            frappe.response["message"] = "Address ID is required"
+            frappe.response["data"] = []
+            return
+
+        frappe.delete_doc("Customer Address", address_id, ignore_permissions=True)
+        frappe.db.commit()
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Customer Address Deleted Successfully"
+        frappe.response["data"] = []
+
+    except Exception as e:
+        frappe.log_error(message=frappe.get_traceback(), title="Delete Customer Address Error")
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = []
