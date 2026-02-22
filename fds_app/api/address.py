@@ -95,13 +95,15 @@ def create_customer_address(
             frappe.response["data"] = []
             return
 
-        # If primary = 1 → remove primary from other addresses
         if cint(primary) == 1:
-            frappe.db.sql("""
-                UPDATE `tabCustomer Address`
-                SET `primary` = 0
-                WHERE customer = %s
-            """, (customer,))
+            old_addresses = frappe.get_all(
+                "Customer Address",
+                filters={"customer": customer, "primary": 1},
+                fields=["name"]
+            )
+
+            for addr in old_addresses:
+                frappe.db.set_value("Customer Address", addr.name, "primary", 0)
 
         doc = frappe.get_doc({
             "doctype": "Customer Address",
@@ -116,6 +118,14 @@ def create_customer_address(
         })
 
         doc.insert(ignore_permissions=True)
+
+        customer_doc = frappe.get_doc("Customer", customer)
+
+        customer_doc.append("custom_address", {
+            "address": doc.name,
+        })
+
+        customer_doc.save(ignore_permissions=True)
         frappe.db.commit()
 
         frappe.response["status"] = True
@@ -151,11 +161,14 @@ def update_customer_address(
         doc = frappe.get_doc("Customer Address", address_id)
 
         if primary is not None and cint(primary) == 1:
-            frappe.db.sql("""
-                UPDATE `tabCustomer Address`
-                SET `primary` = 0
-                WHERE customer = %s
-            """, (doc.customer,))
+            old_addresses = frappe.get_all(
+                "Customer Address",
+                filters={"customer": customer, "primary": 1},
+                fields=["name"]
+            )
+
+            for addr in old_addresses:
+                frappe.db.set_value("Customer Address", addr.name, "primary", 0)
 
         if first_name is not None:
             doc.first_name = first_name
