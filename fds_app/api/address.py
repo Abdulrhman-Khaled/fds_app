@@ -95,7 +95,7 @@ def create_customer_address(
             frappe.response["data"] = []
             return
 
-        if cint(primary) == 1:
+        if primary == 1:
             old_addresses = frappe.get_all(
                 "Customer Address",
                 filters={"customer": customer, "primary": 1},
