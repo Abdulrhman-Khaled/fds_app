@@ -160,7 +160,7 @@ def update_customer_address(
 
         doc = frappe.get_doc("Customer Address", address_id)
 
-        if primary is not None and cint(primary) == 1:
+        if primary is not None and primary == 1:
             old_addresses = frappe.get_all(
                 "Customer Address",
                 filters={"customer": customer, "primary": 1},
