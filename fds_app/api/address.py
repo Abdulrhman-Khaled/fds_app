@@ -29,19 +29,50 @@ def get_regions(**kwargs):
 
         data = []
         for r in regions:
-            branch_data = {
-                "id": r.id,
+            region_data = {
+                "id": r.name,
                 "name_en": r.name_en,
                 "name_ar": r.name_ar
             }
-            data.append(branch_data)
+            data.append(region_data)
 
         frappe.response["status"] = True
-        frappe.response["message"] = "region list"
+        frappe.response["message"] = "Regions List"
         frappe.response["data"] = data
 
     except Exception as e:
         frappe.log_error(message=frappe.get_traceback(), title="Region List Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []
+
+@frappe.whitelist(allow_guest=True)
+def get_states(region=None):
+    try:
+        if not region:
+            frappe.response["status"] = False
+            frappe.response["message"] = "Region is required"
+            frappe.response["data"] = []
+            return
+
+        states = frappe.get_all("State", filters={"disable": 0, "region": region}, fields=["*"])
+
+        data = []
+        for s in states:
+            state_data = {
+                "id": s.name,
+                "name_en": s.name_en,
+                "name_ar": s.name_ar,
+                "region": s.region
+            }
+            data.append(state_data)
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "States List"
+        frappe.response["data"] = data
+
+    except Exception as e:
+        frappe.log_error(message=frappe.get_traceback(), title="States List Error")
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = []
