@@ -214,13 +214,18 @@ def delete_customer_address(address_id):
         customer_name = address_doc.customer
         was_primary = address_doc.primary
 
-        frappe.db.delete(
+        rows = frappe.get_all(
             "Customer Address Table",
-            {
-                "parent": customer_name,
-                "address": address_id
-            }
+            filters={"address": address_id},
+            fields=["name"]
         )
+
+        for row in rows:
+            frappe.delete_doc(
+                "Customer Address Table",
+                row.name,
+                force=True
+            )
 
         frappe.delete_doc("Customer Address", address_id, ignore_permissions=True)
 
