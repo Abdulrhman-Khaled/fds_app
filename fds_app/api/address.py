@@ -216,10 +216,10 @@ def delete_customer_address(address_id):
 
         customer_doc = frappe.get_doc("Customer", customer_name)
 
-        customer_doc.custom_address = [
-            row for row in customer_doc.custom_address
-            if row.address != address_id
-        ]
+        for row in customer_doc.custom_address:
+            if row.address == address_id:
+                customer_doc.remove(row)
+                break
 
         customer_doc.save(ignore_permissions=True)
 
