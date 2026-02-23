@@ -119,13 +119,6 @@ def create_customer_address(
 
         doc.insert(ignore_permissions=True)
 
-        customer_doc = frappe.get_doc("Customer", customer)
-
-        customer_doc.append("custom_address", {
-            "address": doc.name,
-        })
-
-        customer_doc.save(ignore_permissions=True)
         frappe.db.commit()
 
         frappe.response["status"] = True
