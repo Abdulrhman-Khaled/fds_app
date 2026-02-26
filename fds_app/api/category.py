@@ -73,3 +73,46 @@ def get_home_data():
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = []
+
+
+@frappe.whitelist(allow_guest=True)
+def get_categories(category_id=None):
+    try:
+        base_url = frappe.utils.get_url()
+
+        if category_id:
+            categories = frappe.get_all(
+                "Item Group",
+                filters={"parent_item_group": category_id, "is_group": 0},
+                fields=["name", "custom_name_ar", "image", "parent_item_group"],
+                order_by="name asc"
+            )
+        else:
+            categories = frappe.get_all(
+                "Item Group",
+                filters={"is_group": 1},
+                fields=["name", "custom_name_ar", "image"],
+                order_by="name asc"
+            )
+
+        category_list = []
+        for c in categories:
+            category_list.append({
+                "id": c.name,
+                "name_en": c.name,
+                "name_ar": c.custom_name_ar,
+                "image":  base_url + c.image if c.image else None,
+                "parent_id": c.parent_item_group if c.parent_item_group else None
+            })
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Categories fetched successfully"
+        frappe.response["data"] = {
+            category_list
+        }
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Categories API Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []

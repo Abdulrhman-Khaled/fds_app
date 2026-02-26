@@ -109,16 +109,25 @@ def social_login(**kwargs):
         })
 
 def _user_to_dict(user):
+    profile_image = ""
+    if user.user_image:
+        profile_image = frappe.utils.get_url(user.user_image)
+
+    customer_name = frappe.db.get_value(
+        "Customer",
+        {"custom_user": user.name},
+        "name"
+    )
+
     return {
         "id": user.name,
+        "customer_id": customer_name,
         "first_name": user.first_name,
         "last_name": user.last_name,
         "email": user.email,
         "login_type": user.bio,
         "full_name": user.full_name,
-        "profile_image": frappe.utils.get_url(user.user_image) if user.user_image else "",
-        "created_at": str(user.creation),
-        "updated_at": str(user.modified),
+        "profile_image": profile_image,
     }
 
 @frappe.whitelist(allow_guest=True)
@@ -132,6 +141,7 @@ def register(**kwargs):
         first_name = data.get("first_name")
         last_name = data.get("last_name")
         email = data.get("email")
+        mobile = data.get("mobile")
         password = data.get("password")
         gender = data.get("gender", "").lower()
         user_type = data.get("user_type", "email")
@@ -156,6 +166,7 @@ def register(**kwargs):
             "first_name": first_name,
             "last_name": last_name,
             "full_name": full_name,
+            "mobile_no": mobile,
             "user_type": "Website User",
             "enabled": 1,
             "gender": gender,
@@ -277,7 +288,6 @@ def _login_user_to_dict(user):
         "mobile": user.mobile_no or "",
         "email": user.email,
         "gender": user.gender or "",
-        "user_role": [],
         "api_token": "", 
         "profile_image": profile_image,
         "login_type": user.bio or "",
