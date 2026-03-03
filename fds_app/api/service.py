@@ -156,12 +156,10 @@ def get_items_by_group(item_group, customer_id=None):
             unit_name_en = None
             unit_name_ar = None
 
-            for row in item.custom_slots_and_variations_table:
-
+            variation_rows = item.custom_slots_and_variations_table or []
+            for row in variation_rows:
                 variation_doc = frappe.get_doc("Variations", row.variation)
-
                 unit_doc = frappe.get_doc("Units", variation_doc.unit)
-
                 variation_data.append({
                     "variation_id": variation_doc.name,
                     "variation_name_en": variation_doc.name_en,
@@ -173,9 +171,7 @@ def get_items_by_group(item_group, customer_id=None):
                     "max_per_day": row.max_per_day,
                     "price": row.price
                 })
-
                 prices.append(row.price)
-
                 if not unit_name_en:
                     unit_name_en = unit_doc.name_en
                     unit_name_ar = unit_doc.name_ar
