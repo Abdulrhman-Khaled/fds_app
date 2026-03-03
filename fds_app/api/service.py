@@ -50,8 +50,7 @@ def get_items_by_group(item_group, customer_id=None):
                 "is_stock_item",
                 "item_group",
                 "image",
-                "custom_holiday_list",
-                "custom_slots_and_variations_table"
+                "custom_holiday_list"
             ],
         )
 
@@ -156,8 +155,8 @@ def get_items_by_group(item_group, customer_id=None):
             prices = []
             unit_name_en = None
             unit_name_ar = None
-
-            variation_rows = item.custom_slots_and_variations_table or []
+            item_doc = frappe.get_doc("Item", item.name)
+            variation_rows = item_doc.custom_slots_and_variations_table or []
             for row in variation_rows:
                 variation_doc = frappe.get_doc("Variations", row.variation)
                 unit_doc = frappe.get_doc("Units", variation_doc.unit)
