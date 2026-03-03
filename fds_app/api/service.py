@@ -134,8 +134,54 @@ def get_items_by_group(item_group, customer_id=None):
                     "is_user_like": is_user_like,
                     "is_user_dislike": is_user_dislike,
                     "review_msg": r.review,
-                    "user_name": r.customer
+                    "user_name": frappe.get_value("Customer", r.customer, "customer_name")
                 })
+
+            reviews = frappe.get_all(
+                "Reviews",
+                filters={"service": item.name},
+                fields=["stars"]
+            )
+
+            rating_count = len(reviews)
+
+            if rating_count > 0:
+                total_stars = sum([r.stars for r in reviews])
+                rating = round(total_stars / rating_count, 1)
+            else:
+                rating = 0
+
+            variation_data = []
+            prices = []
+            unit_name_en = None
+            unit_name_ar = None
+
+            for row in item.custom_slots_and_variations_table:
+
+                variation_doc = frappe.get_doc("Variations", row.variation)
+
+                unit_doc = frappe.get_doc("Units", variation_doc.unit)
+
+                variation_data.append({
+                    "variation_id": variation_doc.name,
+                    "variation_name_en": variation_doc.name_en,
+                    "variation_name_ar": variation_doc.name_ar,
+                    "unit_name_en": unit_doc.name_en,
+                    "unit_name_ar": unit_doc.name_ar,
+                    "from_time": row.get("from"),
+                    "to_time": row.to,
+                    "max_per_day": row.max_per_day,
+                    "price": row.price
+                })
+
+                prices.append(row.price)
+
+                if not unit_name_en:
+                    unit_name_en = unit_doc.name_en
+                    unit_name_ar = unit_doc.name_ar
+
+            min_price = min(prices) if prices else 0
+            max_price = max(prices) if prices else 0
 
             item_list.append({
                 "id": item.name,
@@ -150,7 +196,14 @@ def get_items_by_group(item_group, customer_id=None):
                 "image":  base_url + item.image if item.image else None,
                 "max_purchase_qty": item.custom_max_per_order,
                 "holidays": holiday_dates,
-                "reviews": review_list
+                "reviews": review_list,
+                "rating": rating,
+                "rating_count": rating_count,
+                "min_price": min_price,
+                "max_price": max_price,
+                "unit_name": unit_name_en,
+                "unit_name_ar": unit_name_ar,
+                "variation_data": variation_data,
             })
 
         frappe.response["status"] = True
