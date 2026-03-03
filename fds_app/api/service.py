@@ -50,7 +50,8 @@ def get_items_by_group(item_group, customer_id=None):
                 "is_stock_item",
                 "item_group",
                 "image",
-                "custom_holiday_list"
+                "custom_holiday_list",
+                "custom_slots_and_variations_table"
             ],
         )
 
