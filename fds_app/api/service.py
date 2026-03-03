@@ -23,7 +23,7 @@ def flatten(lis):
             yield item
 
 @frappe.whitelist(allow_guest=True)
-def get_items_by_group(item_group):
+def get_items_by_group(item_group, customer_id=None):
     try:
         if not item_group:
             frappe.response["status"] = False
@@ -70,6 +70,73 @@ def get_items_by_group(item_group):
                         h.holiday_date for h in holiday_doc.holidays
                     ]
 
+            reviews_raw = frappe.get_all(
+                "Reviews",
+                filters={"service": item.name},
+                fields=["name", "customer", "stars", "review"],
+                order_by="creation desc"
+            )
+
+            review_list = []
+            for r in reviews_raw:
+                likes_count = frappe.db.count(
+                    "Customers Table",
+                    {
+                        "parent": r.name,
+                        "parenttype": "Reviews",
+                        "parentfield": "liked_by"
+                    }
+                )
+
+                dislikes_count = frappe.db.count(
+                    "Customers Table",
+                    {
+                        "parent": r.name,
+                        "parenttype": "Reviews",
+                        "parentfield": "disliked_by"
+                    }
+                )
+
+                is_user_like = 0
+                is_user_dislike = 0
+
+                if customer_id:
+                    user_liked = frappe.db.exists(
+                        "Customers Table",
+                        {
+                            "parent": r.name,
+                            "parenttype": "Reviews",
+                            "parentfield": "liked_by",
+                            "customer": customer_id
+                        }
+                    )
+
+                    user_disliked = frappe.db.exists(
+                        "Customers Table",
+                        {
+                            "parent": r.name,
+                            "parenttype": "Reviews",
+                            "parentfield": "disliked_by",
+                            "customer": customer_id
+                        }
+                    )
+
+                    is_user_like = 1 if user_liked else 0
+                    is_user_dislike = 1 if user_disliked else 0
+
+                review_list.append({
+                    "id": int(r.name),
+                    "product_id": item.name,
+                    "user_id": r.customer,
+                    "rating": r.stars,
+                    "review_likes": likes_count,
+                    "review_dislikes": dislikes_count,
+                    "is_user_like": is_user_like,
+                    "is_user_dislike": is_user_dislike,
+                    "review_msg": r.review,
+                    "user_name": r.customer
+                })
+
             item_list.append({
                 "id": item.name,
                 "name_en": item.item_name,
@@ -82,7 +149,8 @@ def get_items_by_group(item_group):
                 "category": item.item_group,
                 "image":  base_url + item.image if item.image else None,
                 "max_purchase_qty": item.custom_max_per_order,
-                "holidays": holiday_dates
+                "holidays": holiday_dates,
+                "reviews": review_list
             })
 
         frappe.response["status"] = True
