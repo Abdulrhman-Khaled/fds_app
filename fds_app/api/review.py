@@ -23,6 +23,68 @@ def flatten(lis):
             yield item
 
 @frappe.whitelist(allow_guest=True)
+def get_review_list(item_id=None, user_id=None):
+    try:
+        if not item_id:
+            frappe.response["status"] = False
+            frappe.response["message"] = "item_id is required"
+            frappe.response["data"] = []
+            return
+
+        reviews_raw = frappe.get_all(
+            "Reviews",
+            filters={"service": item_id},
+            fields=["name", "customer", "stars", "review", "creation"],
+            order_by="creation desc"
+        )
+
+        review_list = []
+        for r in reviews_raw:
+            likes_count = frappe.db.count("Customers Table", {
+                "parent": r.name, "parenttype": "Reviews", "parentfield": "liked_by"
+            })
+            dislikes_count = frappe.db.count("Customers Table", {
+                "parent": r.name, "parenttype": "Reviews", "parentfield": "disliked_by"
+            })
+
+            is_user_like = 0
+            is_user_dislike = 0
+
+            if user_id:
+                is_user_like = 1 if frappe.db.exists("Customers Table", {
+                    "parent": r.name, "parenttype": "Reviews",
+                    "parentfield": "liked_by", "customer": user_id
+                }) else 0
+                is_user_dislike = 1 if frappe.db.exists("Customers Table", {
+                    "parent": r.name, "parenttype": "Reviews",
+                    "parentfield": "disliked_by", "customer": user_id
+                }) else 0
+
+            review_list.append({
+                "id": int(r.name),
+                "product_id": item_id,
+                "user_id": r.customer,
+                "rating": r.stars,
+                "review_likes": likes_count,
+                "review_dislikes": dislikes_count,
+                "is_user_like": is_user_like,
+                "is_user_dislike": is_user_dislike,
+                "review_msg": r.review,
+                "user_name": frappe.get_value("Customer", r.customer, "customer_name"),
+                "created_at": str(r.creation)
+            })
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Reviews fetched successfully"
+        frappe.response["data"] = review_list
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Get Review List Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []
+
+@frappe.whitelist(allow_guest=True)
 def create_review(service, customer, stars, review=None):
     try:
         if not service or not customer:
@@ -105,32 +167,6 @@ def delete_review(review_id):
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Delete Review Error")
-        frappe.response["status"] = False
-        frappe.response["message"] = str(e)
-        frappe.response["data"] = []
-
-@frappe.whitelist(allow_guest=True)
-def add_like(review_id, customer):
-    try:
-        doc = frappe.get_doc("Reviews", review_id)
-
-        for row in doc.disliked_by:
-            if row.customer == customer:
-                doc.remove(row)
-                break
-
-        if not any(row.customer == customer for row in doc.liked_by):
-            doc.append("liked_by", {"customer": customer})
-
-        doc.save(ignore_permissions=True)
-        frappe.db.commit()
-
-        frappe.response["status"] = True
-        frappe.response["message"] = "Liked Successfully"
-        frappe.response["data"] = {"likes": len(doc.liked_by)}
-
-    except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Add Like Error")
         frappe.response["status"] = False
         frappe.response["message"] = str(e)
         frappe.response["data"] = []
