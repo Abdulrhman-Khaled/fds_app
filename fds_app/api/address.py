@@ -241,7 +241,7 @@ def delete_customer_address(address_id):
         frappe.response["data"] = []
 
 @frappe.whitelist(allow_guest=True)
-def get_customer_address(customer_id):
+def get_customer_address(customer_id=None):
     try:
         if not customer_id:
             frappe.response["status"] = False
@@ -255,9 +255,44 @@ def get_customer_address(customer_id):
             fields=["name", "first_name", "last_name", "region", "state", "address", "primary", "lat_lng"]
         )
 
+        address_list = []
+        for addr in addresses:
+            region_id = None
+            region_en = None
+            region_ar = None
+            if addr.region:
+                region_doc = frappe.get_doc("Region", addr.region)
+                region_id = int(region_doc.name) if str(region_doc.name).isdigit() else region_doc.name
+                region_en = region_doc.name_en
+                region_ar = region_doc.name_ar
+
+            state_id = None
+            state_en = None
+            state_ar = None
+            if addr.state:
+                state_doc = frappe.get_doc("State", addr.state)
+                state_id = int(state_doc.name) if str(state_doc.name).isdigit() else state_doc.name
+                state_en = state_doc.name_en
+                state_ar = state_doc.name_ar
+
+            address_list.append({
+                "id": int(addr.name),
+                "first_name": addr.first_name,
+                "last_name": addr.last_name,
+                "address_line_1": addr.address,
+                "region_id": region_id,
+                "region_en": region_en,
+                "region_ar": region_ar,
+                "state_id": state_id,
+                "state_en": state_en,
+                "state_ar": state_ar,
+                "lat_lng": addr.lat_lng,
+                "is_primary": 1 if addr.primary else 0,
+            })
+
         frappe.response["status"] = True
         frappe.response["message"] = "Customer Address List"
-        frappe.response["data"] = addresses
+        frappe.response["data"] = address_list
 
     except Exception as e:
         frappe.log_error(message=frappe.get_traceback(), title="Customer Address List Error")
