@@ -239,3 +239,28 @@ def delete_customer_address(address_id):
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = []
+
+@frappe.whitelist(allow_guest=True)
+def get_customer_address(customer_id):
+    try:
+        if not customer_id:
+            frappe.response["status"] = False
+            frappe.response["message"] = "Customer ID is required"
+            frappe.response["data"] = []
+            return
+
+        addresses = frappe.get_all(
+            "Customer Address",
+            filters={"customer": customer_id},
+            fields=["name", "first_name", "last_name", "region", "state", "address", "primary", "lat_lng"]
+        )
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Customer Address List"
+        frappe.response["data"] = addresses
+
+    except Exception as e:
+        frappe.log_error(message=frappe.get_traceback(), title="Customer Address List Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []

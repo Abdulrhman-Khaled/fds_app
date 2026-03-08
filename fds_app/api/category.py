@@ -74,7 +74,6 @@ def get_home_data():
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = []
 
-
 @frappe.whitelist(allow_guest=True)
 def get_categories(category_id=None):
     try:
