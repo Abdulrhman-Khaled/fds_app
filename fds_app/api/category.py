@@ -106,10 +106,8 @@ def get_categories(category_id=None):
 
         frappe.response["status"] = True
         frappe.response["message"] = "Categories fetched successfully"
-        frappe.response["data"] = {
-            category_list
-        }
-
+        frappe.response["data"] = category_list
+        
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Categories API Error")
         frappe.response["status"] = False
