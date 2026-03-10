@@ -64,7 +64,7 @@ def get_items(category_id=None, user_id=None, search=None):
             reviews_raw = frappe.get_all(
                 "Reviews",
                 filters={"service": item.name},
-                fields=["name", "customer", "stars", "review"],
+                fields=["name", "customer", "stars", "review", "creation"],
                 order_by="creation desc"
             )
 
@@ -207,7 +207,7 @@ def get_item_detail(id=None, user_id=None):
         reviews_raw = frappe.get_all(
             "Reviews",
             filters={"service": item.name},
-            fields=["name", "customer", "stars", "review"],
+            fields=["name", "customer", "stars", "review", "creation"],
             order_by="creation desc"
         )
 
