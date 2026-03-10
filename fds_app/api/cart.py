@@ -97,10 +97,13 @@ def add_to_cart(customer_id=None, service_id=None, variation_id=None, qty=None, 
 
         item_doc = frappe.get_doc("Item", service_id)
         price = 0
-        for row in (item_doc.custom_slots_and_variations_table or []):
-            if row.variation == variation_id:
-                price = row.price
-                break
+        if is_service == 1:
+            price = item_doc.custom_fixed_price
+        else:
+            for row in (item_doc.custom_slots_and_variations_table or []):
+                if row.variation == variation_id:
+                    price = row.price
+                    break
 
         cart = frappe.get_doc({
             "doctype": "Carts",
@@ -147,10 +150,13 @@ def update_cart(cart_id=None, service_id=None, variation_id=None, qty=None):
         price = cart_doc.price
         if service_id and variation_id:
             item_doc = frappe.get_doc("Item", service_id)
-            for row in (item_doc.custom_slots_and_variations_table or []):
-                if row.variation == str(variation_id):
-                    price = row.price
-                    break
+            if is_service == 1:
+                price = item_doc.custom_fixed_price
+            else:
+                for row in (item_doc.custom_slots_and_variations_table or []):
+                    if row.variation == str(variation_id):
+                        price = row.price
+                        break
 
         cart_doc.qty = int(qty)
         cart_doc.price = price

@@ -146,8 +146,8 @@ def get_items(category_id=None, user_id=None, search=None):
                 "desc_en": item.description,
                 "desc_ar": item.custom_description_ar,
                 "brand_name": brand_name,
-                "is_service": item.is_stock_item == 0,
-                "has_variation": item.is_stock_item == 0,
+                "is_service": 1 if item.is_stock_item == 0 else 0,
+                "has_variation":1 if item.is_stock_item == 0 else 0,
                 "category": item.item_group,
                 "image": base_url + item.image if item.image else None,
                 "max_purchase_qty": item.custom_max_per_order,
@@ -161,6 +161,7 @@ def get_items(category_id=None, user_id=None, search=None):
                 "unit_name": unit_name_en,
                 "unit_name_ar": unit_name_ar,
                 "variation_data": variation_data,
+                "fixed_price" : item.custom_fixed_price
             })
 
         frappe.response["status"] = True
@@ -286,8 +287,8 @@ def get_item_detail(id=None, user_id=None):
             "desc_en": item.description,
             "desc_ar": item.custom_description_ar,
             "brand_name": brand_name,
-            "is_service": item.is_stock_item == 0,
-            "has_variation": item.is_stock_item == 0,
+            "is_service": 1 if item.is_stock_item == 0 else 0,
+            "has_variation": 1 if item.is_stock_item == 0 else 0,
             "category": item.item_group,
             "image": base_url + item.image if item.image else None,
             "max_purchase_qty": item.custom_max_per_order,
@@ -301,6 +302,7 @@ def get_item_detail(id=None, user_id=None):
             "unit_name_ar": unit_name_ar,
             "variation_data": variation_data,
             "is_wish_list": is_wish_list,
+            "fixed_price" : item.custom_fixed_price
         }
 
         related_items = frappe.get_all(
@@ -363,8 +365,8 @@ def get_item_detail(id=None, user_id=None):
                 "name_ar": rel.custom_item_name_ar,
                 "desc_en": rel.description,
                 "desc_ar": rel.custom_description_ar,
-                "is_service": rel.is_stock_item == 0,
-                "has_variation": rel.is_stock_item == 0,
+                "is_service": 1 if rel.is_stock_item == 0 else 0,
+                "has_variation": 1 if rel.is_stock_item == 0 else 0,
                 "category": rel.item_group,
                 "image": base_url + rel.image if rel.image else None,
                 "max_purchase_qty": rel.custom_max_per_order,
@@ -376,6 +378,7 @@ def get_item_detail(id=None, user_id=None):
                 "unit_name_ar": rel_unit_ar,
                 "variation_data": rel_variations,
                 "is_wish_list": rel_wish,
+                "fixed_price" : rel.custom_fixed_price
             })
 
         frappe.response["status"] = True
@@ -517,8 +520,8 @@ def get_wishlist(user_id=None):
                 "name_ar": item.custom_item_name_ar,
                 "desc_en": item.description,
                 "desc_ar": item.custom_description_ar,
-                "is_service": item.is_stock_item == 0,
-                "has_variation": item.is_stock_item == 0,
+                "is_service": 1 if item.is_stock_item == 0 else 0,
+                "has_variation": 1 if item.is_stock_item == 0 else 0,
                 "category": item.item_group,
                 "image": base_url + item.image if item.image else None,
                 "max_purchase_qty": item.custom_max_per_order,
@@ -530,7 +533,8 @@ def get_wishlist(user_id=None):
                 "unit_name": unit_name_en,
                 "unit_name_ar": unit_name_ar,
                 "variation_data": variation_data,
-                "is_wish_list": 1
+                "is_wish_list": 1,
+                "fixed_price" : item.custom_fixed_price
             })
 
         frappe.response["status"] = True
