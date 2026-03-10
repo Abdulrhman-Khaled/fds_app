@@ -63,7 +63,7 @@ def get_states(region=None):
                 "id": s.name,
                 "name_en": s.name_en,
                 "name_ar": s.name_ar,
-                "region": s.region
+                "region": int(s.region)
             }
             data.append(state_data)
 
@@ -280,10 +280,10 @@ def get_customer_address(customer_id=None):
                 "first_name": addr.first_name,
                 "last_name": addr.last_name,
                 "address_line_1": addr.address,
-                "region_id": region_id,
+                "region_id": int(region_id),
                 "region_en": region_en,
                 "region_ar": region_ar,
-                "state_id": state_id,
+                "state_id": int(state_id),
                 "state_en": state_en,
                 "state_ar": state_ar,
                 "lat_lng": addr.lat_lng,
