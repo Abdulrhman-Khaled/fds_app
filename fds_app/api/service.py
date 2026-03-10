@@ -100,7 +100,8 @@ def get_items(category_id=None, user_id=None, search=None):
                     "is_user_like": is_user_like,
                     "is_user_dislike": is_user_dislike,
                     "review_msg": r.review,
-                    "user_name": frappe.get_value("Customer", r.customer, "customer_name")
+                    "user_name": frappe.get_value("Customer", r.customer, "customer_name"),
+                    "created_at": str(r.creation)
                 })
 
             reviews = frappe.get_all("Reviews", filters={"service": item.name}, fields=["stars"])
@@ -242,7 +243,8 @@ def get_item_detail(id=None, user_id=None):
                 "is_user_like": is_user_like,
                 "is_user_dislike": is_user_dislike,
                 "review_msg": r.review,
-                "user_name": frappe.get_value("Customer", r.customer, "customer_name")
+                "user_name": frappe.get_value("Customer", r.customer, "customer_name"),
+                "created_at": str(r.creation)
             })
 
         reviews = frappe.get_all("Reviews", filters={"service": item.name}, fields=["stars"])
