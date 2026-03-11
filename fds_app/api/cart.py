@@ -192,6 +192,7 @@ def remove_from_cart(cart_id=None):
         cart_data = _build_cart_data(cart_doc, base_url)
 
         frappe.delete_doc("Carts", cart_id, ignore_permissions=True)
+        frappe.db.commit()
 
         frappe.response["status"] = True
         frappe.response["message"] = "Cart item removed successfully"
