@@ -97,7 +97,7 @@ def add_to_cart(customer_id=None, service_id=None, variation_id=None, qty=None, 
 
         item_doc = frappe.get_doc("Item", service_id)
         price = 0
-        if is_service == 1:
+        if is_service == 0:
             price = item_doc.custom_fixed_price
         else:
             for row in (item_doc.custom_slots_and_variations_table or []):
@@ -133,7 +133,7 @@ def add_to_cart(customer_id=None, service_id=None, variation_id=None, qty=None, 
 
 
 @frappe.whitelist(allow_guest=True)
-def update_cart(cart_id=None, service_id=None, variation_id=None, qty=None):
+def update_cart(cart_id=None, service_id=None, variation_id=None, qty=None, is_service=0):
     try:
         if not cart_id or not qty:
             frappe.response["status"] = False
@@ -150,7 +150,7 @@ def update_cart(cart_id=None, service_id=None, variation_id=None, qty=None):
         price = cart_doc.price
         if service_id and variation_id:
             item_doc = frappe.get_doc("Item", service_id)
-            if is_service == 1:
+            if is_service == 0:
                 price = item_doc.custom_fixed_price
             else:
                 for row in (item_doc.custom_slots_and_variations_table or []):
@@ -203,7 +203,6 @@ def remove_from_cart(cart_id=None):
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["cart"] = None
-
 
 @frappe.whitelist(allow_guest=True)
 def get_cart_list(customer_id=None):
