@@ -86,3 +86,149 @@ def get_free_slots(product_id=None, receive_date=None, variation_id=None):
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["available_slots"] = []
+
+
+def _find_driver_for_state(service_id, state):
+    item_doc = frappe.get_doc("Item", service_id)
+    for driver_row in (item_doc.custom_drivers or []):
+        driver_doc = frappe.get_doc("Drivers", driver_row.driver)
+        if driver_doc.disable:
+            continue
+        driver_states = [str(s.state) for s in (driver_doc.states or [])]
+        if str(state) in driver_states:
+            return driver_doc.name
+    return None
+
+
+def _build_order_data(order_doc):
+    return {
+        "order_id": int(order_doc.name),
+        "total_price": order_doc.total_price,
+        "status": order_doc.status,
+        "payment_status": order_doc.payment_status,
+        "payment_method": order_doc.payment_method,
+        "payment_ref": order_doc.payment_ref,
+        "is_service_order": 1 if order_doc.service_order else 0,
+        "order_date": str(order_doc.order_date) if order_doc.order_date else None,
+        "note": order_doc.note,
+        "driver": order_doc.driver,
+        "service": order_doc.service,
+        "variation": order_doc.variation,
+        "time_slot": order_doc.data_lnrd,
+        "customer": order_doc.customer,
+        "address": order_doc.address,
+        "phone_number": order_doc.phone_number,
+        "email": order_doc.email,
+        "created_at": str(order_doc.creation),
+    }
+
+
+@frappe.whitelist(allow_guest=True)
+def create_order(
+    customer_id=None,
+    address_id=None,
+    phone_number=None,
+    email=None,
+    note=None,
+    payment_method=None,
+    payment_status=None,
+    payment_ref=None,
+    order_date=None,
+):
+    try:
+        if not customer_id or not address_id:
+            frappe.response["status"] = False
+            frappe.response["message"] = "customer_id and address_id are required"
+            frappe.response["data"] = None
+            return
+
+        address_doc = frappe.get_doc("Customer Address", address_id)
+        if not address_doc.state:
+            frappe.response["status"] = False
+            frappe.response["message"] = "Customer address has no state assigned"
+            frappe.response["data"] = None
+            return
+
+        cart_items = frappe.get_all(
+            "Carts",
+            filters={"customer": customer_id},
+            fields=["name", "service", "variation", "qty", "price", "time_from", "time_to", "is_service"]
+        )
+
+        if not cart_items:
+            frappe.response["status"] = False
+            frappe.response["message"] = "Cart is empty"
+            frappe.response["data"] = None
+            return
+
+        is_service_order = any(c.is_service == 1 for c in cart_items)
+        total_price = sum((c.price or 0) * (c.qty or 1) for c in cart_items)
+        customer_state = address_doc.state
+
+        primary_service_id = cart_items[0].service
+        driver = _find_driver_for_state(primary_service_id, customer_state)
+
+        if not driver:
+            frappe.response["status"] = False
+            frappe.response["message"] = "No available driver for your area"
+            frappe.response["data"] = None
+            return
+
+        order_fields = {
+            "doctype": "Order",
+            "customer": customer_id,
+            "address": address_id,
+            "phone_number": phone_number,
+            "email": email,
+            "order_date": order_date,
+            "total_price": total_price,
+            "status": "confirmed",
+            "payment_status": payment_status,
+            "payment_method": payment_method,
+            "payment_ref": payment_ref,
+            "note": note,
+            "driver": driver,
+        }
+
+        if is_service_order:
+            cart = cart_items[0]
+            order_fields.update({
+                "service_order": 1,
+                "variation": cart.variation,
+                "data_lnrd": f"{str(cart.time_from)} - {str(cart.time_to)}" if cart.time_from and cart.time_to else None,
+                "service": cart.service,
+            })
+        else:
+            services_rows = [
+                {
+                    "doctype": "Sales Invoice Item",
+                    "item_code": c.service,
+                    "item_name": frappe.db.get_value("Item", c.service, "item_name"),
+                    "qty": c.qty,
+                    "rate": c.price,
+                    "amount": (c.price or 0) * (c.qty or 1),
+                }
+                for c in cart_items
+            ]
+            order_fields.update({
+                "service_order": 0,
+                "services": services_rows,
+            })
+
+        order = frappe.get_doc(order_fields)
+        order.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        for c in cart_items:
+            frappe.delete_doc("Carts", c.name, ignore_permissions=True)
+        frappe.db.commit()
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Order created successfully"
+        frappe.response["data"] = _build_order_data(order)
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Create Order Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = None
