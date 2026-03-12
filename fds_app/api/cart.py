@@ -19,8 +19,17 @@ def flatten(lis):
         if isinstance(item, Iterable) and not isinstance(item, str):
             for x in flatten(item):
                 yield x
-        else:        
+        else:
             yield item
+
+def _get_price(item_doc, variation_id, is_service):
+    if int(is_service) == 0:
+        return item_doc.custom_fixed_price or 0
+    else:
+        for row in (item_doc.custom_slots_and_variations_table or []):
+            if str(row.variation) == str(variation_id):
+                return row.price
+        return 0
 
 def _build_cart_data(cart_doc, base_url):
     item_doc = frappe.get_doc("Item", cart_doc.service)
@@ -87,7 +96,6 @@ def add_to_cart(customer_id=None, service_id=None, variation_id=None, qty=None, 
                     frappe.response["message"] = "You already have a service in your cart. Only one service is allowed at a time."
                     frappe.response["cart"] = None
                     return
-
             if is_service == 0:
                 if any(c.is_service == 1 for c in existing_carts):
                     frappe.response["status"] = False
@@ -96,14 +104,7 @@ def add_to_cart(customer_id=None, service_id=None, variation_id=None, qty=None, 
                     return
 
         item_doc = frappe.get_doc("Item", service_id)
-        price = 0
-        if is_service == 0:
-            price = item_doc.custom_fixed_price
-        else:
-            for row in (item_doc.custom_slots_and_variations_table or []):
-                if row.variation == variation_id:
-                    price = row.price
-                    break
+        price = _get_price(item_doc, variation_id, is_service)
 
         cart = frappe.get_doc({
             "doctype": "Carts",
@@ -117,6 +118,7 @@ def add_to_cart(customer_id=None, service_id=None, variation_id=None, qty=None, 
             "is_service": is_service
         })
         cart.insert(ignore_permissions=True)
+        frappe.db.commit()
 
         base_url = frappe.utils.get_url()
         cart_data = _build_cart_data(cart, base_url)
@@ -133,7 +135,7 @@ def add_to_cart(customer_id=None, service_id=None, variation_id=None, qty=None, 
 
 
 @frappe.whitelist(allow_guest=True)
-def update_cart(cart_id=None, service_id=None, variation_id=None, qty=None, is_service=0):
+def update_cart(cart_id=None, service_id=None, variation_id=None, qty=None):
     try:
         if not cart_id or not qty:
             frappe.response["status"] = False
@@ -150,19 +152,14 @@ def update_cart(cart_id=None, service_id=None, variation_id=None, qty=None, is_s
         price = cart_doc.price
         if service_id and variation_id:
             item_doc = frappe.get_doc("Item", service_id)
-            if is_service == 0:
-                price = item_doc.custom_fixed_price
-            else:
-                for row in (item_doc.custom_slots_and_variations_table or []):
-                    if row.variation == str(variation_id):
-                        price = row.price
-                        break
+            price = _get_price(item_doc, variation_id, cart_doc.is_service)
 
         cart_doc.qty = int(qty)
         cart_doc.price = price
         if variation_id:
             cart_doc.variation = str(variation_id)
         cart_doc.save(ignore_permissions=True)
+        frappe.db.commit()
 
         frappe.response["status"] = True
         frappe.response["message"] = "Cart updated successfully"
@@ -171,6 +168,7 @@ def update_cart(cart_id=None, service_id=None, variation_id=None, qty=None, is_s
         frappe.log_error(frappe.get_traceback(), "Update Cart Error")
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
+
 
 @frappe.whitelist(allow_guest=True)
 def remove_from_cart(cart_id=None):
@@ -203,6 +201,7 @@ def remove_from_cart(cart_id=None):
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["cart"] = None
+
 
 @frappe.whitelist(allow_guest=True)
 def get_cart_list(customer_id=None):
