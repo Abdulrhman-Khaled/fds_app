@@ -381,7 +381,11 @@ def get_order_list(customer_id=None, status=None):
 
         filters = {"customer": customer_id}
         if status:
-            filters["status"] = status
+            status_list = [s.strip() for s in status.split(",")]
+            if len(status_list) > 1:
+                filters["status"] = ["in", status_list]
+            else:
+                filters["status"] = status_list[0]
 
         orders = frappe.get_all(
             "Order",
