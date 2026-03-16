@@ -286,7 +286,8 @@ def _build_order_response(order_doc, base_url):
             service_name = item_doc.item_name
             service_name_ar = item_doc.custom_item_name_ar
             service_image = base_url + item_doc.image if item_doc.image else None
- 
+            service_review = _get_customer_review(order_doc.customer, order_doc.service)
+            
         if order_doc.variation:
             variation_doc = frappe.get_doc("Variations", order_doc.variation)
             variation_id = variation_doc.name
@@ -303,6 +304,7 @@ def _build_order_response(order_doc, base_url):
                 "qty": row.qty,
                 "price": row.rate,
                 "amount": row.amount,
+                "product_review": _get_customer_review(order_doc.customer, row.item_code)
             })
 
     return {
@@ -333,6 +335,7 @@ def _build_order_response(order_doc, base_url):
         "variation_id": variation_id,
         "variation_name_en": variation_name_en,
         "variation_name_ar": variation_name_ar,
+        "service_review": service_review,
         "product_details": product_details,
     }
 
@@ -440,3 +443,35 @@ def cancel_order(id=None):
         frappe.log_error(frappe.get_traceback(), "Cancel Order Error")
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
+
+def _get_customer_review(customer_id, product_id):
+    review = frappe.db.get_value(
+        "Reviews",
+        {"service": product_id, "customer": customer_id},
+        ["name", "stars", "review", "creation"],
+        as_dict=True
+    )
+
+    if not review:
+        return None
+
+    likes_count = frappe.db.count("Customers Table", {
+        "parent": review.name, "parenttype": "Reviews", "parentfield": "liked_by"
+    })
+    dislikes_count = frappe.db.count("Customers Table", {
+        "parent": review.name, "parenttype": "Reviews", "parentfield": "disliked_by"
+    })
+
+    return {
+        "id": int(review.name),
+        "product_id": product_id,
+        "user_id": customer_id,
+        "rating": review.stars,
+        "review_likes": likes_count,
+        "review_dislikes": dislikes_count,
+        "is_user_like": 0,
+        "is_user_dislike": 0,
+        "review_msg": review.review,
+        "user_name": frappe.db.get_value("Customer", customer_id, "customer_name"),
+        "created_at": str(review.creation)
+    }
