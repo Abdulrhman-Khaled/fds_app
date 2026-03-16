@@ -25,21 +25,38 @@ def flatten(lis):
 @frappe.whitelist(allow_guest=True)
 def get_items(category_id=None, user_id=None, search=None):
     try:
-        item_group = category_id
-
         base_url = frappe.utils.get_url()
 
-        filters = {
-            "item_group": item_group,
-            "disabled": 0,
-        }
+        if category_id:
+            child_groups = frappe.get_all(
+                "Item Group",
+                filters={"parent_item_group": category_id},
+                fields=["name"]
+            )
 
+            if child_groups:
+                group_names = [g.name for g in child_groups]
+            else:
+                group_names = [category_id]
+        else:
+            group_names = []
+
+        filters = {"disabled": 0}
+
+        if group_names:
+            filters["item_group"] = ["in", group_names]
+    
+        or_filters = None
         if search:
-            filters["item_name"] = ["like", f"%{search}%"]
+            or_filters = [
+                ["item_name", "like", f"%{search}%"],
+                ["custom_item_name_ar", "like", f"%{search}%"]
+            ]
 
         items = frappe.get_all(
             "Item",
             filters=filters,
+            or_filters=or_filters,
             fields=[
                 "name", "item_name", "custom_item_name_ar",
                 "description", "custom_description_ar",
@@ -130,8 +147,8 @@ def get_items(category_id=None, user_id=None, search=None):
                     "variation_id": variation_doc.name,
                     "variation_name_en": variation_doc.name_en,
                     "variation_name_ar": variation_doc.name_ar,
-                    "from_time": row.get("from"),
-                    "to_time": row.to,
+                    "from_time": str(row.get("from")) if row.get("from") else None,
+                    "to_time": str(row.to) if row.to else None,
                     "max_per_day": row.max_per_day,
                     "price": row.price
                 })
@@ -139,7 +156,7 @@ def get_items(category_id=None, user_id=None, search=None):
                 if not unit_name_en:
                     unit_name_en = unit_doc.name_en
                     unit_name_ar = unit_doc.name_ar
-            
+
             item_list.append({
                 "id": item.name,
                 "name_en": item.item_name,
@@ -148,7 +165,7 @@ def get_items(category_id=None, user_id=None, search=None):
                 "desc_ar": item.custom_description_ar,
                 "brand_name": brand_name,
                 "is_service": 1 if item.is_stock_item == 0 else 0,
-                "has_variation":1 if item.is_stock_item == 0 else 0,
+                "has_variation": 1 if item.is_stock_item == 0 else 0,
                 "category": item.item_group,
                 "image": base_url + item.image if item.image else None,
                 "max_purchase_qty": item.custom_max_per_order,
@@ -162,7 +179,7 @@ def get_items(category_id=None, user_id=None, search=None):
                 "unit_name": unit_name_en,
                 "unit_name_ar": unit_name_ar,
                 "variation_data": variation_data,
-                "fixed_price" : item.custom_fixed_price
+                "fixed_price": item.custom_fixed_price
             })
 
         frappe.response["status"] = True
