@@ -444,7 +444,6 @@ def add_to_wishlist(user_id=None, item_id=None):
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
 
-
 @frappe.whitelist(allow_guest=True)
 def remove_from_wishlist(user_id=None, item_id=None):
     try:
@@ -468,7 +467,6 @@ def remove_from_wishlist(user_id=None, item_id=None):
         frappe.log_error(frappe.get_traceback(), "Remove From Wishlist Error")
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
-
 
 @frappe.whitelist(allow_guest=True)
 def get_wishlist(user_id=None):

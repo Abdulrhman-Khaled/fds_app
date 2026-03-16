@@ -75,9 +75,9 @@ def _build_cart_data(cart_doc, base_url):
 @frappe.whitelist(allow_guest=True)
 def add_to_cart(customer_id=None, service_id=None, variation_id=None, qty=None, time_from=None, time_to=None, is_service=0):
     try:
-        if not customer_id or not service_id or not variation_id or not qty:
+        if not customer_id or not service_id or not qty:
             frappe.response["status"] = False
-            frappe.response["message"] = "customer_id, service_id, variation_id and qty are required"
+            frappe.response["message"] = "customer_id, service_id, and qty are required"
             frappe.response["cart"] = None
             return
 
@@ -104,7 +104,11 @@ def add_to_cart(customer_id=None, service_id=None, variation_id=None, qty=None, 
                     return
 
         item_doc = frappe.get_doc("Item", service_id)
-        price = _get_price(item_doc, variation_id, is_service)
+
+        if variation_id:
+            price = _get_price(item_doc, variation_id, is_service)
+        else:
+            price = item_doc.custom_fixed_price
 
         cart = frappe.get_doc({
             "doctype": "Carts",
@@ -150,9 +154,12 @@ def update_cart(cart_id=None, service_id=None, variation_id=None, qty=None):
         cart_doc = frappe.get_doc("Carts", cart_id)
 
         price = cart_doc.price
-        if service_id and variation_id:
+        if service_id:
             item_doc = frappe.get_doc("Item", service_id)
-            price = _get_price(item_doc, variation_id, cart_doc.is_service)
+            if variation_id:
+                price = _get_price(item_doc, variation_id, cart_doc.is_service)
+            else:
+                price = item_doc.custom_fixed_price
 
         cart_doc.qty = int(qty)
         cart_doc.price = price
