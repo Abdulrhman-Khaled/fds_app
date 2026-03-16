@@ -44,7 +44,7 @@ def get_items(category_id=None, user_id=None, search=None):
                 "name", "item_name", "custom_item_name_ar",
                 "description", "custom_description_ar",
                 "brand", "custom_max_per_order", "is_stock_item",
-                "item_group", "image", "custom_holiday_list"
+                "item_group", "image", "custom_holiday_list", "custom_fixed_price"
             ],
         )
 
@@ -318,7 +318,7 @@ def get_item_detail(id=None, user_id=None):
                 "name", "item_name", "custom_item_name_ar",
                 "description", "custom_description_ar",
                 "brand", "custom_max_per_order", "is_stock_item",
-                "item_group", "image", "custom_holiday_list"
+                "item_group", "image", "custom_holiday_list", "custom_fixed_price"
             ],
             limit=5
         )

@@ -276,7 +276,7 @@ def _build_order_response(order_doc, base_url):
             service_name = item_doc.item_name
             service_name_ar = item_doc.custom_item_name_ar
             service_image = base_url + item_doc.image if item_doc.image else None
-
+ 
         if order_doc.variation:
             variation_doc = frappe.get_doc("Variations", order_doc.variation)
             variation_id = variation_doc.name
