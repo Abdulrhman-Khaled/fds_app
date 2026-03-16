@@ -232,3 +232,201 @@ def create_order(
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = None
+
+def _build_order_response(order_doc, base_url):
+    address_line = None
+    state_name = None
+    region_name = None
+    lat_lng = None
+
+    if order_doc.address:
+        address_doc = frappe.get_doc("Customer Address", order_doc.address)
+        address_line = address_doc.address
+        lat_lng = address_doc.lat_lng
+        if address_doc.state:
+            state_name = frappe.db.get_value("State", address_doc.state, "name_en")
+        if address_doc.region:
+            region_name = frappe.db.get_value("Region", address_doc.region, "name_en")
+
+    driver_name = None
+    driver_contact = None
+    if order_doc.driver:
+        driver_doc = frappe.get_doc("Drivers", order_doc.driver)
+        driver_name = driver_doc.driver_name
+        if driver_doc.user:
+            driver_contact = frappe.db.get_value("User", driver_doc.user, "mobile_no")
+
+    customer_user = frappe.db.get_value("Customer", order_doc.customer, "custom_user")
+
+    service_id = None
+    service_name = None
+    service_name_ar = None
+    service_image = None
+    variation_id = None
+    variation_name_en = None
+    variation_name_ar = None
+    product_details = []
+    
+    full_customer_name = order_doc.customer_first_name + " " + order_doc.customer_last_name
+
+    if order_doc.service_order:
+        if order_doc.service:
+            item_doc = frappe.get_doc("Item", order_doc.service)
+            service_id = item_doc.name
+            service_name = item_doc.item_name
+            service_name_ar = item_doc.custom_item_name_ar
+            service_image = base_url + item_doc.image if item_doc.image else None
+
+        if order_doc.variation:
+            variation_doc = frappe.get_doc("Variations", order_doc.variation)
+            variation_id = variation_doc.name
+            variation_name_en = variation_doc.name_en
+            variation_name_ar = variation_doc.name_ar
+    else:
+        for row in (order_doc.services or []):
+            item_doc = frappe.get_doc("Item", row.item_code)
+            product_details.append({
+                "product_id": row.item_code,
+                "product_name": row.item_name,
+                "product_name_ar": item_doc.custom_item_name_ar,
+                "product_image": base_url + item_doc.image if item_doc.image else None,
+                "qty": row.qty,
+                "price": row.rate,
+                "amount": row.amount,
+            })
+
+    return {
+        "id": int(order_doc.name),
+        "status": order_doc.status,
+        "payment_status": order_doc.payment_status,
+        "payment_method": order_doc.payment_method,
+        "total_price": order_doc.total_price,
+        "is_service_order": 1 if order_doc.service_order else 0,
+        "order_date": str(order_doc.order_date) if order_doc.order_date else None,
+        "note": order_doc.note,
+        "time_slot": order_doc.data_lnrd,
+        "created_at": str(order_doc.creation),
+        "customer_id": customer_user,
+        "user_name": full_customer_name,
+        "phone_no": order_doc.phone_number,
+        "email": order_doc.email,
+        "address_line_1": address_line,
+        "state": state_name,
+        "region": region_name,
+        "lat_lng": lat_lng,
+        "driver_name": driver_name,
+        "driver_contact": driver_contact,
+        "service_id": service_id,
+        "service_name": service_name,
+        "service_name_ar": service_name_ar,
+        "service_image": service_image,
+        "variation_id": variation_id,
+        "variation_name_en": variation_name_en,
+        "variation_name_ar": variation_name_ar,
+        "product_details": product_details,
+    }
+
+
+@frappe.whitelist(allow_guest=True)
+def get_order_detail(order_id=None):
+    try:
+        if not order_id:
+            frappe.response["status"] = False
+            frappe.response["message"] = "order_id is required"
+            frappe.response["data"] = None
+            return
+
+        if not frappe.db.exists("Order", order_id):
+            frappe.response["status"] = False
+            frappe.response["message"] = "Order not found"
+            frappe.response["data"] = None
+            return
+
+        base_url = frappe.utils.get_url()
+        order_doc = frappe.get_doc("Order", order_id)
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Order fetched successfully"
+        frappe.response["data"] = _build_order_response(order_doc, base_url)
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Get Order Detail Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = None
+
+
+@frappe.whitelist(allow_guest=True)
+def get_order_list(customer_id=None, status=None):
+    try:
+        if not customer_id:
+            frappe.response["status"] = False
+            frappe.response["message"] = "customer_id is required"
+            frappe.response["data"] = []
+            return
+
+        filters = {"customer": customer_id}
+        if status:
+            filters["status"] = status
+
+        orders = frappe.get_all(
+            "Order",
+            filters=filters,
+            fields=["name"],
+            order_by="creation desc"
+        )
+
+        base_url = frappe.utils.get_url()
+        order_list = []
+
+        for o in orders:
+            order_doc = frappe.get_doc("Order", o.name)
+            order_list.append(_build_order_response(order_doc, base_url))
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Orders fetched successfully"
+        frappe.response["data"] = order_list
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Get Order List Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []
+
+
+@frappe.whitelist(allow_guest=True)
+def cancel_order(id=None):
+    try:
+        if not id:
+            frappe.response["status"] = False
+            frappe.response["message"] = "order id is required"
+            return
+
+        if not frappe.db.exists("Order", id):
+            frappe.response["status"] = False
+            frappe.response["message"] = "Order not found"
+            return
+
+        order_doc = frappe.get_doc("Order", id)
+
+        if order_doc.status == "cancelled":
+            frappe.response["status"] = False
+            frappe.response["message"] = "Order is already cancelled"
+            return
+
+        if order_doc.status == "completed":
+            frappe.response["status"] = False
+            frappe.response["message"] = "Completed orders cannot be cancelled"
+            return
+
+        order_doc.status = "cancelled"
+        order_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Order cancelled successfully"
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Cancel Order Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
