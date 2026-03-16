@@ -207,6 +207,16 @@ def create_order(
                     "qty": c.qty,
                     "rate": c.price,
                     "amount": (c.price or 0) * (c.qty or 1),
+                    "uom": frappe.db.get_value("Item", c.service, "stock_uom") or "Nos",
+                    "conversion_factor": 1,
+                    "base_rate": c.price,
+                    "base_amount": (c.price or 0) * (c.qty or 1),
+                    "income_account": frappe.db.get_value(
+                        "Company", frappe.defaults.get_global_default("company"), "default_income_account"
+                    ) or "Sales - FDS",
+                    "cost_center": frappe.db.get_value(
+                        "Company", frappe.defaults.get_global_default("company"), "cost_center"
+                    ) or "Main - FDS",
                 }
                 for c in cart_items
             ]
