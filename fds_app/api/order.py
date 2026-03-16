@@ -275,6 +275,7 @@ def _build_order_response(order_doc, base_url):
     variation_id = None
     variation_name_en = None
     variation_name_ar = None
+    service_review = None
     product_details = []
     
     full_customer_name = order_doc.customer_first_name + " " + order_doc.customer_last_name
