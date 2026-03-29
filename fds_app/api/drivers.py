@@ -255,7 +255,7 @@ def _build_order_response(order_doc, base_url):
         "time_slot": order_doc.data_lnrd or "",
         "created_at": str(order_doc.creation),
         "phone_no": order_doc.phone_number or "",
-        "customer_name": order_doc.customer_first_name or "" + " " + order_doc.customer_last_name or "",
+        "customer_name": order_doc.customer_first_name + " " + order_doc.customer_last_name,
         "email": order_doc.email or "",
         "address_line_1": address_line,
         "state": state_name,
