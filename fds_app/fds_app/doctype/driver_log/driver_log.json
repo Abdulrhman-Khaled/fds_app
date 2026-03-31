@@ -1,0 +1,233 @@
+{
+ "actions": [],
+ "autoname": "autoincrement",
+ "creation": "2025-12-18 00:59:20.961055",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_5bx6",
+  "driver_id",
+  "driver_name",
+  "column_break_offc",
+  "date",
+  "vehicle",
+  "specialist_details_section",
+  "specialist",
+  "column_break_qril",
+  "specialist_name",
+  "section_break_famd",
+  "finance_info",
+  "section_break_pjtv",
+  "total",
+  "column_break_azso",
+  "expenses",
+  "column_break_zynl",
+  "difference",
+  "section_break_fene",
+  "remarks",
+  "section_break_axsq",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_5bx6",
+   "fieldtype": "Section Break",
+   "label": "Driver Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Driver Log",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "driver_id",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Driver ID",
+   "options": "Drivers",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "driver_id.driver_name",
+   "fieldname": "driver_name",
+   "fieldtype": "Data",
+   "label": "Driver Name",
+   "read_only": 1,
+   "translatable": 1
+  },
+  {
+   "fieldname": "column_break_offc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_axsq",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Vehicle",
+   "options": "Vehicle",
+   "reqd": 1
+  },
+  {
+   "fieldname": "specialist_details_section",
+   "fieldtype": "Section Break",
+   "label": "Specialist Details"
+  },
+  {
+   "fieldname": "specialist",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Specialist ID",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_qril",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "specialist.employee_name",
+   "fieldname": "specialist_name",
+   "fieldtype": "Data",
+   "label": "Specialist Name",
+   "read_only": 1,
+   "translatable": 1
+  },
+  {
+   "fieldname": "section_break_pjtv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "label": "Total Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_azso",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "expenses",
+   "fieldtype": "Currency",
+   "label": "Expenses"
+  },
+  {
+   "fieldname": "section_break_fene",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "column_break_zynl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "difference",
+   "fieldtype": "Currency",
+   "label": "Difference",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_famd",
+   "fieldtype": "Section Break",
+   "label": "Finance Details"
+  },
+  {
+   "fieldname": "finance_info",
+   "fieldtype": "Table",
+   "label": "Finance Info",
+   "options": "Finance Details Table"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-12-18 11:35:29.806374",
+ "modified_by": "Administrator",
+ "module": "Salon",
+ "name": "Driver Log",
+ "naming_rule": "Autoincrement",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Salon Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Driver",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
+}

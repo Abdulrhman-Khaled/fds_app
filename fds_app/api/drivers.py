@@ -446,3 +446,126 @@ def update_order_payment(user_id=None, id=None, payment_status=None, payment_met
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = None
+
+@frappe.whitelist(allow_guest=True)
+def get_driver_modes():
+    try:
+        modes = frappe.get_all(
+            "Driver Mode of Payment",
+            fields=["name", "name_en", "name_ar"],
+            order_by="name_en asc"
+        )
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Driver modes fetched successfully"
+        frappe.response["data"] = modes
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "get_driver_modes API Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []
+
+@frappe.whitelist(allow_guest=True)
+def get_vehicles():
+    try:
+        vehicles = frappe.get_all(
+            "Vehicle",
+            fields=["name", "license_plate"],
+            order_by="license_plate asc"
+        )
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Vehicles fetched successfully"
+        frappe.response["data"] = vehicles
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "get_vehicles API Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []
+
+@frappe.whitelist(allow_guest=True)
+def get_staff():
+    try:
+        employees = frappe.get_all(
+            "Employee",
+            fields=["name", "employee_name"],
+            order_by="employee_name asc"
+        )
+
+        data = []
+        for emp in employees:
+            data.append({
+                "id": emp.name,
+                "full_name": emp.employee_name
+            })
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Employees fetched successfully"
+        frappe.response["data"] = data
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "get_employees API Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []
+
+@frappe.whitelist(allow_guest=True)
+def create_driver_log():
+    try:
+        raw_data = frappe.request.data
+
+        if not raw_data:
+            frappe.throw("Request body is empty")
+
+        if isinstance(raw_data, bytes):
+            raw_data = raw_data.decode("utf-8")
+
+        data = json.loads(raw_data)
+
+        required_fields = ["date", "driver_id", "vehicle", "specialist"]
+        for field in required_fields:
+            if not data.get(field):
+                frappe.throw(f"{field} is required")
+
+        doc = frappe.new_doc("Driver Log")
+        doc.date = frappe.utils.getdate(data.get("date"))
+        doc.driver_id = data.get("driver_id")
+        doc.vehicle = data.get("vehicle")
+        doc.specialist = data.get("specialist")
+
+        expenses = float(data.get("expenses") or 0)
+        doc.expenses = expenses
+
+        doc.remarks = data.get("remarks", "")
+
+        total = 0.0
+        for row in data.get("finance_info", []):
+            amount = float(row.get("amount") or 0)
+            doc.append("finance_info", {
+                "mode_of_payment": row.get("mode_of_payment"),
+                "amount": amount
+            })
+            total += amount
+
+        doc.total = total
+        doc.difference = total - expenses
+
+        doc.insert(ignore_permissions=True)
+        doc.submit()
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Driver Log created successfully"
+        frappe.response["data"] = {
+            "name": doc.name,
+            "total": doc.total,
+            "expenses": doc.expenses,
+            "difference": doc.difference
+        }
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "create_driver_log API Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = str(e)
+        frappe.response["data"] = {}

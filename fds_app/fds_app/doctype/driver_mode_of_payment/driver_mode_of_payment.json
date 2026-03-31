@@ -1,0 +1,63 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:name_en",
+ "creation": "2025-12-18 10:47:59.105515",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "name_en",
+  "name_ar"
+ ],
+ "fields": [
+  {
+   "fieldname": "name_en",
+   "fieldtype": "Data",
+   "label": "Name En",
+   "unique": 1
+  },
+  {
+   "fieldname": "name_ar",
+   "fieldtype": "Data",
+   "label": "Name Ar"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-12-18 11:10:42.706422",
+ "modified_by": "Administrator",
+ "module": "Salon",
+ "name": "Driver Mode of Payment",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Salon Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
