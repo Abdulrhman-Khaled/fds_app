@@ -249,7 +249,7 @@ def _build_order_response(order_doc, base_url):
         "payment_method": order_doc.payment_method or "",
         "total_price": order_doc.total_price or 0,
         "is_service_order": 1 if order_doc.service_order else 0,
-        "order_date": str(order_doc.order_date) if order_doc.order_date else "",
+        "order_date": str(order_doc.order_date) if order_doc.order_date else str(order_doc.creation),
         "note": order_doc.note or "",
         "driver_note": order_doc.driver_note or "",
         "time_slot": order_doc.data_lnrd or "",
