@@ -45,7 +45,7 @@ def get_home_data():
 
         sliders = frappe.get_all(
             "Sliders",
-            fields=["name", "name1", "image"],
+            fields=["name", "name1", "image", "url" , "message"],
             order_by="modified desc"
         )
 
@@ -58,7 +58,9 @@ def get_home_data():
             slider_list.append({
                 "id": s.name,
                 "name": s.name1,
-                "image": image_url
+                "image": image_url,
+                "url": s.url,
+                "message": s.message
             })
 
         frappe.response["status"] = True
