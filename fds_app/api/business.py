@@ -168,9 +168,6 @@ def update_business_profile(
 
         customer_doc.customer_type = "Company"
 
-        customer_doc.save(ignore_permissions=True)
-        frappe.db.commit()
-
         if customer_doc.customer_primary_address and frappe.db.exists("Address", customer_doc.customer_primary_address):
             address_doc = frappe.get_doc("Address", customer_doc.customer_primary_address)
         else:
@@ -201,10 +198,8 @@ def update_business_profile(
         if phone:
             address_doc.phone = phone
 
-        
         address_doc.save(ignore_permissions=True)
-        frappe.db.commit()
-        
+
         customer_doc.customer_primary_address = address_doc.name
         customer_doc.save(ignore_permissions=True)
         frappe.db.commit()
