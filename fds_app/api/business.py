@@ -168,6 +168,8 @@ def update_business_profile(
 
         customer_doc.customer_type = "Company"
 
+        customer_doc.save(ignore_permissions=True)
+
         if customer_doc.customer_primary_address and frappe.db.exists("Address", customer_doc.customer_primary_address):
             address_doc = frappe.get_doc("Address", customer_doc.customer_primary_address)
         else:
