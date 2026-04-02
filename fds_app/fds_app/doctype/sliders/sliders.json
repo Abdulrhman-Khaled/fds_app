@@ -7,6 +7,8 @@
  "field_order": [
   "slider_details_section",
   "name1",
+  "message",
+  "url",
   "image"
  ],
  "fields": [
@@ -24,12 +26,22 @@
    "fieldname": "image",
    "fieldtype": "Attach Image",
    "label": "image"
+  },
+  {
+   "fieldname": "url",
+   "fieldtype": "Data",
+   "label": "URL"
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Text",
+   "label": "Message"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-15 17:41:56.026927",
+ "modified": "2026-04-01 12:52:28.477324",
  "modified_by": "Administrator",
  "module": "FDS App",
  "name": "Sliders",
