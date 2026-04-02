@@ -199,7 +199,8 @@ def update_business_profile(
             address_doc.phone = phone
 
         address_doc.save(ignore_permissions=True)
-
+        
+        customer_doc.reload()
         customer_doc.customer_primary_address = address_doc.name
         customer_doc.save(ignore_permissions=True)
         frappe.db.commit()
