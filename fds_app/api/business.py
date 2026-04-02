@@ -174,14 +174,12 @@ def update_business_profile(
         if customer_doc.customer_primary_address and frappe.db.exists("Address", customer_doc.customer_primary_address):
             address_doc = frappe.get_doc("Address", customer_doc.customer_primary_address)
         else:
-            address_doc = frappe.get_doc({
-                "doctype": "Address",
-                "address_title": customer_doc.customer_name,
-                "address_type": "Billing",
-                "links": [{
-                    "link_doctype": "Customer",
-                    "link_name": customer_id,
-                }]
+            address_doc = frappe.new_doc("Address")
+            address_doc.address_title = customer_doc.customer_name
+            address_doc.address_type = "Billing"
+            address_doc.append("links", {
+                "link_doctype": "Customer",
+                "link_name": customer_id
             })
 
         if address_line1:
@@ -203,13 +201,12 @@ def update_business_profile(
         if phone:
             address_doc.phone = phone
 
-        if address_doc.is_new():
-            address_doc.insert(ignore_permissions=True)
-            customer_doc.customer_primary_address = address_doc.name
-            customer_doc.save(ignore_permissions=True)
-        else:
-            address_doc.save(ignore_permissions=True)
-
+        
+        address_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        customer_doc.customer_primary_address = address_doc.name
+        customer_doc.save(ignore_permissions=True)
         frappe.db.commit()
 
         frappe.response["status"] = True
