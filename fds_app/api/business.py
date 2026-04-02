@@ -53,6 +53,8 @@ def check_business_eligibility(customer_id=None):
             missing_fields.append("primary_address")
 
         address_line1 = None
+        building_number = None
+        area = None
         city = None
         country = None
         state = None
@@ -67,6 +69,8 @@ def check_business_eligibility(customer_id=None):
                 address_doc = frappe.get_doc("Address", primary_address)
 
                 address_line1 = address_doc.address_line1 or None
+                building_number = address_doc.custom_building_number or None
+                area = address_doc.custom_area or None
                 city = address_doc.city or None
                 country = address_doc.country or None
                 state = address_doc.state or None
@@ -76,6 +80,10 @@ def check_business_eligibility(customer_id=None):
 
                 if not address_line1:
                     missing_fields.append("address_line1")
+                if not building_number:
+                    missing_fields.append("building_number")
+                if not area:
+                    missing_fields.append("area")
                 if not city:
                     missing_fields.append("city")
                 if not country:
@@ -102,6 +110,8 @@ def check_business_eligibility(customer_id=None):
                 "vat_registration_number": vat_number,
                 "primary_address": primary_address,
                 "address_line1": address_line1,
+                "building_number": building_number,
+                "area": area,
                 "city": city,
                 "country": country,
                 "state": state,
@@ -124,6 +134,8 @@ def update_business_profile(
     tax_id=None,
     vat_registration_number=None,
     address_line1=None,
+    building_number=None,
+    area=None,
     city=None,
     country=None,
     state=None,
@@ -173,6 +185,10 @@ def update_business_profile(
 
         if address_line1:
             address_doc.address_line1 = address_line1
+        if building_number:
+            address_doc.custom_building_number = building_number
+        if area:
+            address_doc.custom_area = area
         if city:
             address_doc.city = city
         if country:
@@ -205,6 +221,8 @@ def update_business_profile(
             "vat_registration_number": customer_doc.custom_vat_registration_number,
             "primary_address": customer_doc.customer_primary_address,
             "address_line1": address_doc.address_line1,
+            "building_number": address_doc.custom_building_number,
+            "area": address_doc.custom_area,
             "city": address_doc.city,
             "country": address_doc.country,
             "state": address_doc.state,
