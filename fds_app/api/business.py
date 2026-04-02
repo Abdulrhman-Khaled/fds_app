@@ -106,6 +106,7 @@ def check_business_eligibility(customer_id=None):
             "is_eligible": 1 if is_eligible else 0,
             "missing_fields": missing_fields,
             "fields": {
+                "company_name": customer_doc.customer_name,
                 "tax_id": tax_id,
                 "vat_registration_number": vat_number,
                 "primary_address": primary_address,
