@@ -41,33 +41,60 @@ def check_business_eligibility(customer_id=None):
 
         missing_fields = []
 
-        if not customer_doc.tax_id:
+        tax_id = customer_doc.tax_id or None
+        vat_number = customer_doc.custom_vat_registration_number or None
+        primary_address = customer_doc.customer_primary_address or None
+
+        if not tax_id:
             missing_fields.append("tax_id")
-        if not customer_doc.custom_vat_registration_number:
+        if not vat_number:
             missing_fields.append("vat_registration_number")
-        if not customer_doc.customer_primary_address:
+        if not primary_address:
             missing_fields.append("primary_address")
 
+        address_line1 = None
+        building_number = None
+        area = None
+        city = None
+        country = None
+        state = None
+        pincode = None
+        email = None
+        phone = None
 
-        if customer_doc.customer_primary_address:
-            if not frappe.db.exists("Address", customer_doc.customer_primary_address):
+        if primary_address:
+            if not frappe.db.exists("Address", primary_address):
                 missing_fields.append("primary_address_not_found")
             else:
-                address_doc = frappe.get_doc("Address", customer_doc.customer_primary_address)
+                address_doc = frappe.get_doc("Address", primary_address)
 
-                if not address_doc.address_line1:
+                address_line1 = address_doc.address_line1 or None
+                building_number = address_doc.custom_building_number or None
+                area = address_doc.custom_area or None
+                city = address_doc.city or None
+                country = address_doc.country or None
+                state = address_doc.state or None
+                pincode = address_doc.pincode or None
+                email = address_doc.email_id or None
+                phone = address_doc.phone or None
+
+                if not address_line1:
                     missing_fields.append("address_line1")
-                if not address_doc.city:
+                if not building_number:
+                    missing_fields.append("building_number")
+                if not area:
+                    missing_fields.append("area")
+                if not city:
                     missing_fields.append("city")
-                if not address_doc.country:
+                if not country:
                     missing_fields.append("country")
-                if not address_doc.state:
+                if not state:
                     missing_fields.append("state")
-                if not address_doc.pincode:
+                if not pincode:
                     missing_fields.append("pincode")
-                if not address_doc.email_id:
+                if not email:
                     missing_fields.append("email")
-                if not address_doc.phone:
+                if not phone:
                     missing_fields.append("phone")
 
         is_eligible = len(missing_fields) == 0
@@ -77,11 +104,135 @@ def check_business_eligibility(customer_id=None):
         frappe.response["data"] = {
             "customer_id": customer_id,
             "is_eligible": 1 if is_eligible else 0,
-            "missing_fields": missing_fields
+            "missing_fields": missing_fields,
+            "fields": {
+                "tax_id": tax_id,
+                "vat_registration_number": vat_number,
+                "primary_address": primary_address,
+                "address_line1": address_line1,
+                "building_number": building_number,
+                "area": area,
+                "city": city,
+                "country": country,
+                "state": state,
+                "pincode": pincode,
+                "email": email,
+                "phone": phone,
+            }
         }
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Check Business Eligibility Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = None
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def update_business_profile(
+    customer_id=None,
+    customer_name=None,
+    tax_id=None,
+    vat_registration_number=None,
+    address_line1=None,
+    building_number=None,
+    area=None,
+    city=None,
+    country=None,
+    state=None,
+    pincode=None,
+    email=None,
+    phone=None,
+):
+    try:
+        if not customer_id:
+            frappe.response["status"] = False
+            frappe.response["message"] = "customer_id is required"
+            frappe.response["data"] = None
+            return
+
+        if not frappe.db.exists("Customer", customer_id):
+            frappe.response["status"] = False
+            frappe.response["message"] = "Customer not found"
+            frappe.response["data"] = None
+            return
+
+        customer_doc = frappe.get_doc("Customer", customer_id)
+
+        if customer_name:
+            customer_doc.customer_name = customer_name
+        if tax_id:
+            customer_doc.tax_id = tax_id
+        if vat_registration_number:
+            customer_doc.custom_vat_registration_number = vat_registration_number
+
+        customer_doc.customer_type = "Company"
+
+        customer_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        if customer_doc.customer_primary_address and frappe.db.exists("Address", customer_doc.customer_primary_address):
+            address_doc = frappe.get_doc("Address", customer_doc.customer_primary_address)
+        else:
+            address_doc = frappe.get_doc({
+                "doctype": "Address",
+                "address_title": customer_doc.customer_name,
+                "address_type": "Billing",
+                "links": [{
+                    "link_doctype": "Customer",
+                    "link_name": customer_id,
+                }]
+            })
+
+        if address_line1:
+            address_doc.address_line1 = address_line1
+        if building_number:
+            address_doc.custom_building_number = building_number
+        if area:
+            address_doc.custom_area = area
+        if city:
+            address_doc.city = city
+        if country:
+            address_doc.country = country
+        if state:
+            address_doc.state = state
+        if pincode:
+            address_doc.pincode = pincode
+        if email:
+            address_doc.email_id = email
+        if phone:
+            address_doc.phone = phone
+
+        if address_doc.is_new():
+            address_doc.insert(ignore_permissions=True)
+            customer_doc.customer_primary_address = address_doc.name
+            customer_doc.save(ignore_permissions=True)
+        else:
+            address_doc.save(ignore_permissions=True)
+
+        frappe.db.commit()
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Business profile updated successfully"
+        frappe.response["data"] = {
+            "customer_id": customer_id,
+            "customer_name": customer_doc.customer_name,
+            "customer_type": customer_doc.customer_type,
+            "tax_id": customer_doc.tax_id,
+            "vat_registration_number": customer_doc.custom_vat_registration_number,
+            "primary_address": customer_doc.customer_primary_address,
+            "address_line1": address_doc.address_line1,
+            "building_number": address_doc.custom_building_number,
+            "area": address_doc.custom_area,
+            "city": address_doc.city,
+            "country": address_doc.country,
+            "state": address_doc.state,
+            "pincode": address_doc.pincode,
+            "email": address_doc.email_id,
+            "phone": address_doc.phone,
+        }
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Update Business Profile Error")
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = None
