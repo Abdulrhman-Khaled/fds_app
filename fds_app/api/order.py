@@ -57,8 +57,8 @@ def get_free_slots(product_id=None, receive_date=None, variation_id=None):
 
         for row in variation_rows:
             max_per_day = row.max_per_day or 0
-            time_from = str(row.get("from")) if row.get("from") else None
-            time_to = str(row.to) if row.to else None
+            time_from = str(row.get("from")) if row.get("from") is not None else None
+            time_to = str(row.to) if row.to is not None else None
 
             booked_count = frappe.db.count("Order", {
                 "service": product_id,
