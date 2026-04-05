@@ -195,7 +195,11 @@ def create_order(
             order_fields.update({
                 "service_order": 1,
                 "variation": cart.variation,
-                "data_lnrd": f"{str(cart.time_from)} - {str(cart.time_to)}" if cart.time_from and cart.time_to else None,
+                "data_lnrd": (
+                        f"{str(cart.time_from)} - {str(cart.time_to)}"
+                        if cart.time_from is not None and cart.time_to is not None
+                        else None
+                    ),
                 "service": cart.service,
             })
         else:
