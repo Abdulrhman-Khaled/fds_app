@@ -41,7 +41,7 @@ def get_items(category_id=None, user_id=None, search=None):
         else:
             group_names = []
 
-        filters = {"disabled": 0}
+        filters = {"disabled": 0 , "custom_is_business": 0}
 
         if group_names:
             filters["item_group"] = ["in", group_names]
@@ -61,7 +61,7 @@ def get_items(category_id=None, user_id=None, search=None):
                 "name", "item_name", "custom_item_name_ar",
                 "description", "custom_description_ar",
                 "brand", "custom_max_per_order", "is_stock_item",
-                "item_group", "image", "custom_holiday_list", "custom_fixed_price"
+                "item_group", "image", "custom_holiday_list", "custom_fixed_price", "custom_is_business"
             ],
         )
 
