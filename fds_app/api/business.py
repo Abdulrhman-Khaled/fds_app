@@ -403,7 +403,7 @@ def get_customer_business_orders(customer_id=None):
         orders = frappe.get_all(
             "Sales Order",
             filters={"customer": customer_id, "docstatus": 1},
-            fields=["name", "customer", "delivery_date", "creation", "total", "grand_total", "status", "items"],
+            fields=["name", "customer", "delivery_date", "creation", "total", "grand_total", "status"],
             order_by="creation desc"
         )
 
