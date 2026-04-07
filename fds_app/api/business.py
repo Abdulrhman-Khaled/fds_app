@@ -299,3 +299,93 @@ def get_business_items(category_id=None, search=None):
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = []
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def create_business_order(customer_id=None, delivery_date=None, items=None):
+    try:
+        if not customer_id or not items or not delivery_date:
+            frappe.response["status"] = False
+            frappe.response["message"] = "customer_id, delivery_date and items are required"
+            frappe.response["data"] = None
+            return
+
+        if isinstance(items, str):
+            items = json.loads(items)
+
+        if not isinstance(items, list) or len(items) == 0:
+            frappe.response["status"] = False
+            frappe.response["message"] = "items must be a non-empty list"
+            frappe.response["data"] = None
+            return
+
+        if not frappe.db.exists("Customer", customer_id):
+            frappe.response["status"] = False
+            frappe.response["message"] = "Customer not found"
+            frappe.response["data"] = None
+            return
+
+        order_items = []
+        for item in items:
+            item_code = item.get("item_id") or item.get("name")
+            qty = item.get("qty", 1)
+            rate = item.get("rate", 0)
+
+            if not item_code or not frappe.db.exists("Item", item_code):
+                frappe.response["status"] = False
+                frappe.response["message"] = f"Item {item_code} not found"
+                frappe.response["data"] = None
+                return
+
+            uom = frappe.db.get_value("Item", item_code, "stock_uom") or "Nos"
+
+            order_items.append({
+                "item_code": item_code,
+                "qty": qty,
+                "rate": rate,
+                "uom": uom,
+                "conversion_factor": 1,
+            })
+
+        company = frappe.defaults.get_global_default("company")
+
+        sales_order = frappe.get_doc({
+            "doctype": "Sales Order",
+            "customer": customer_id,
+            "delivery_date": delivery_date,
+            "company": company,
+            "order_type": "Sales",
+            "currency": frappe.db.get_value("Company", company, "default_currency") or "SAR",
+            "items": order_items,
+        })
+
+        sales_order.insert(ignore_permissions=True)
+        sales_order.submit()
+        frappe.db.commit()
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Sales order created successfully"
+        frappe.response["data"] = {
+            "order_id": sales_order.name,
+            "customer": sales_order.customer,
+            "delivery_date": str(sales_order.delivery_date),
+            "total": sales_order.total,
+            "grand_total": sales_order.grand_total,
+            "status": sales_order.status,
+            "items": [
+                {
+                    "item_id": row.item_code,
+                    "item_name": row.item_name,
+                    "qty": row.qty,
+                    "rate": row.rate,
+                    "amount": row.amount,
+                    "uom": row.uom,
+                }
+                for row in sales_order.items
+            ]
+        }
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Create Business Order Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = None
