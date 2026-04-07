@@ -368,6 +368,7 @@ def create_business_order(customer_id=None, delivery_date=None, items=None):
             "order_id": sales_order.name,
             "customer": sales_order.customer,
             "delivery_date": str(sales_order.delivery_date),
+            "creation_date": str(sales_order.creation.date()),
             "total": sales_order.total,
             "grand_total": sales_order.grand_total,
             "status": sales_order.status,
