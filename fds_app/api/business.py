@@ -390,3 +390,53 @@ def create_business_order(customer_id=None, delivery_date=None, items=None):
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = None
+
+@frappe.whitelist(allow_guest=True)
+def get_customer_business_orders(customer_id=None):
+    try:
+        if not customer_id:
+            frappe.response["status"] = False
+            frappe.response["message"] = "customer_id is required"
+            frappe.response["data"] = None
+            return
+
+        orders = frappe.get_all(
+            "Sales Order",
+            filters={"customer": customer_id, "docstatus": 1},
+            fields=["name", "customer", "delivery_date", "creation", "total", "grand_total", "status", "items"],
+            order_by="creation desc"
+        )
+
+        orders = [_build_order_response(order) for order in orders]
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Orders fetched successfully"
+        frappe.response["data"] = orders
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Get Business Orders Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []
+
+def _build_order_response(order_doc):
+    return {
+        "order_id": order_doc.name,
+        "customer": order_doc.customer,
+        "delivery_date": str(order_doc.delivery_date),
+        "creation_date": str(order_doc.creation),
+        "total": order_doc.total,
+        "grand_total": order_doc.grand_total,
+        "status": order_doc.status,
+        "items": [
+            {
+                "item_id": row.item_code,
+                "item_name": row.item_name,
+                "qty": row.qty,
+                "rate": row.rate,
+                "amount": row.amount,
+                "uom": row.uom,
+            }
+            for row in order_doc.items
+        ]
+    }
