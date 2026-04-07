@@ -232,3 +232,70 @@ def update_business_profile(
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = None
+
+@frappe.whitelist(allow_guest=True)
+def get_business_items(category_id=None, search=None):
+    try:
+        if not category_id:
+            frappe.response["status"] = False
+            frappe.response["message"] = "category_id is required"
+            frappe.response["data"] = []
+            return
+
+        base_url = frappe.utils.get_url()
+
+        child_groups = frappe.get_all(
+            "Item Group",
+            filters={"parent_item_group": category_id},
+            fields=["name"]
+        )
+
+        group_names = [g.name for g in child_groups] if child_groups else [category_id]
+
+        filters = {
+            "disabled": 0,
+            "item_group": ["in", group_names]
+        }
+
+        or_filters = None
+        if search:
+            or_filters = [
+                ["item_name", "like", f"%{search}%"],
+                ["custom_item_name_ar", "like", f"%{search}%"]
+            ]
+
+        items = frappe.get_all(
+            "Item",
+            filters=filters,
+            or_filters=or_filters,
+            fields=["name", "item_name", "custom_item_name_ar", "item_group", "image"]
+        )
+
+        item_list = []
+        for item in items:
+            item_price = frappe.db.get_value(
+                "Item Price",
+                {"item_code": item.name},
+                "price_list_rate",
+                order_by="creation asc"
+            )
+            price = item_price or 0
+
+            item_list.append({
+                "id": item.name,
+                "name_en": item.item_name,
+                "name_ar": item.custom_item_name_ar or "",
+                "category": item.item_group,
+                "image": base_url + item.image if item.image else None,
+                "price": price,
+            })
+
+        frappe.response["status"] = True
+        frappe.response["message"] = "Items fetched successfully"
+        frappe.response["data"] = item_list
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Get Business Items Error")
+        frappe.response["status"] = False
+        frappe.response["message"] = f"Server Error: {str(e)}"
+        frappe.response["data"] = []
