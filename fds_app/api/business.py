@@ -391,52 +391,65 @@ def create_business_order(customer_id=None, delivery_date=None, items=None):
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = None
 
+def _build_business_order_response(order_doc):
+    base_url = frappe.utils.get_url()
+    return {
+        "order_id": order_doc.name,
+        "customer": order_doc.customer,
+        "delivery_date": str(order_doc.delivery_date) if order_doc.delivery_date else "",
+        "created_at": str(order_doc.creation),
+        "total": order_doc.total or 0,
+        "grand_total": order_doc.grand_total or 0,
+        "status": order_doc.status or "",
+        "items": [
+            {
+                "item_id": row.item_code,
+                "item_name": row.item_name,
+                "item_name_ar": frappe.db.get_value("Item", row.item_code, "custom_item_name_ar") or "",
+                "image": base_url + frappe.db.get_value("Item", row.item_code, "image")
+                    if frappe.db.get_value("Item", row.item_code, "image") else None,
+                "qty": row.qty,
+                "rate": row.rate,
+                "amount": row.amount,
+                "uom": row.uom,
+            }
+            for row in (order_doc.items or [])
+        ]
+    }
+
 @frappe.whitelist(allow_guest=True)
 def get_customer_business_orders(customer_id=None):
     try:
         if not customer_id:
             frappe.response["status"] = False
             frappe.response["message"] = "customer_id is required"
-            frappe.response["data"] = None
+            frappe.response["data"] = []
+            return
+
+        if not frappe.db.exists("Customer", customer_id):
+            frappe.response["status"] = False
+            frappe.response["message"] = "Customer not found"
+            frappe.response["data"] = []
             return
 
         orders = frappe.get_all(
             "Sales Order",
             filters={"customer": customer_id, "docstatus": 1},
-            fields=["name", "customer", "delivery_date", "creation", "total", "grand_total", "status"],
+            fields=["name"],
             order_by="creation desc"
         )
 
-        orders = [_build_order_response(order) for order in orders]
+        order_list = [
+            _build_business_order_response(frappe.get_doc("Sales Order", o.name))
+            for o in orders
+        ]
 
         frappe.response["status"] = True
         frappe.response["message"] = "Orders fetched successfully"
-        frappe.response["data"] = orders
+        frappe.response["data"] = order_list
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Get Business Orders Error")
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = []
-
-def _build_order_response(order_doc):
-    return {
-        "order_id": order_doc.name,
-        "customer": order_doc.customer,
-        "delivery_date": str(order_doc.delivery_date),
-        "creation_date": str(order_doc.creation),
-        "total": order_doc.total,
-        "grand_total": order_doc.grand_total,
-        "status": order_doc.status,
-        "items": [
-            {
-                "item_id": row.item_code,
-                "item_name": row.item_name,
-                "qty": row.qty,
-                "rate": row.rate,
-                "amount": row.amount,
-                "uom": row.uom,
-            }
-            for row in order_doc.items
-        ]
-    }
