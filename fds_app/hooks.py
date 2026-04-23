@@ -23,6 +23,9 @@ app_license = "mit"
 
 # Includes in <head>
 # ------------------
+app_include_js = [
+    "/assets/fds_app/js/item.js"
+]
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/fds_app/css/fds_app.css"
