@@ -73,8 +73,8 @@ def get_free_slots(product_id=None, receive_date=None, variation_id=None):
             if remaining > 0:
                 available_slots.append({
                     "count": remaining,
-                    "time_from": time_from,
-                    "time_to": time_to,
+                    "time_from": format_time(time_from),
+                    "time_to": format_time(time_to),
                 })
 
         frappe.response["status"] = True
@@ -86,6 +86,15 @@ def get_free_slots(product_id=None, receive_date=None, variation_id=None):
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["available_slots"] = []
+
+def format_time(time_str):
+    if time_str is None:
+        return None
+    parts = str(time_str).split(":")
+    parts = [p.zfill(2) for p in parts]
+    while len(parts) < 3:
+        parts.append("00")
+    return ":".join(parts)
 
 
 def _find_driver_for_state(service_id, state):
