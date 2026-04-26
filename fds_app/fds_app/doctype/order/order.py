@@ -15,23 +15,26 @@ def _is_api_request():
 
 @frappe.whitelist()
 def get_valid_drivers_for_order(service_id, address_id):
-    address_state = frappe.db.get_value("Customer Address", str(address_id), "state")
+    address_state = str(frappe.db.get_value("Customer Address", str(address_id), "state") or "")
+    if not address_state:
+        return {"driver_names": [], "first_driver": None}
 
     item_doc = frappe.get_doc("Item", service_id)
 
     valid_drivers = []
     for row in (item_doc.custom_drivers or []):
-        driver_doc = frappe.get_doc("Drivers", row.driver)
-        if driver_doc.disable:
-            continue
-        driver_states = [str(r.state) for r in (driver_doc.states or [])]
-        if str(address_state) in driver_states:
-            valid_drivers.append(row.driver)
+        # Query the child table directly — avoids None values from doc.states
+        driver_states = frappe.db.get_all(
+            "States Table",
+            filters={"parent": row.driver, "parenttype": "Drivers"},
+            pluck="state"
+        )
+        driver_states = [str(s) for s in driver_states]
 
-    frappe.log_error(
-        f"service={service_id} address={address_id} state={address_state} driver_states_per_driver={[(r.driver, [str(s.state) for s in frappe.get_doc('Drivers', r.driver).states]) for r in item_doc.custom_drivers]} valid={valid_drivers}",
-        "get_valid_drivers DEBUG2"
-    )
+        if address_state in driver_states:
+            is_disabled = frappe.db.get_value("Drivers", row.driver, "disable")
+            if not is_disabled:
+                valid_drivers.append(row.driver)
 
     return {
         "driver_names": valid_drivers,
@@ -50,15 +53,19 @@ class Order(Document):
         if not self.driver or not self.address or not self.service:
             return
 
-        address_state = frappe.db.get_value("Customer Address", str(self.address), "state")
+        address_state = str(frappe.db.get_value("Customer Address", str(self.address), "state") or "")
         item_doc = frappe.get_doc("Item", self.service)
         service_drivers = [r.driver for r in (item_doc.custom_drivers or [])]
 
         if self.driver not in service_drivers:
             frappe.throw(_("Driver is not assigned to this service."))
 
-        driver_doc = frappe.get_doc("Drivers", self.driver)
-        driver_states = [str(r.state) for r in (driver_doc.states or [])]
+        driver_states = frappe.db.get_all(
+            "States Table",
+            filters={"parent": self.driver, "parenttype": "Drivers"},
+            pluck="state"
+        )
+        driver_states = [str(s) for s in driver_states]
 
-        if str(address_state) not in driver_states:
+        if address_state not in driver_states:
             frappe.throw(_("Driver does not cover the selected address state."))
