@@ -23,18 +23,21 @@ def get_valid_drivers_for_order(service_id, address_id):
 
     valid_drivers = []
     for row in (item_doc.custom_drivers or []):
-        # Query the child table directly — avoids None values from doc.states
-        driver_states = frappe.db.get_all(
-            "States Table",
-            filters={"parent": row.driver, "parenttype": "Drivers"},
-            pluck="state"
+        driver_states = frappe.db.sql(
+            "SELECT state FROM `tabStates Table` WHERE parent = %s AND parentfield = 'states'",
+            str(row.driver),
+            as_dict=True
         )
-        driver_states = [str(s) for s in driver_states]
+        driver_state_values = [str(r.state) for r in driver_states]
 
-        if address_state in driver_states:
-            is_disabled = frappe.db.get_value("Drivers", row.driver, "disable")
-            if not is_disabled:
-                valid_drivers.append(row.driver)
+        frappe.log_error(
+            f"driver={row.driver} | address_state={address_state} | driver_states={driver_state_values}",
+            "driver_debug"
+        )
+
+        is_disabled = frappe.db.get_value("Drivers", row.driver, "disable")
+        if not is_disabled and address_state in driver_state_values:
+            valid_drivers.append(row.driver)
 
     return {
         "driver_names": valid_drivers,
@@ -60,12 +63,12 @@ class Order(Document):
         if self.driver not in service_drivers:
             frappe.throw(_("Driver is not assigned to this service."))
 
-        driver_states = frappe.db.get_all(
-            "States Table",
-            filters={"parent": self.driver, "parenttype": "Drivers"},
-            pluck="state"
+        driver_states = frappe.db.sql(
+            "SELECT state FROM `tabStates Table` WHERE parent = %s AND parentfield = 'states'",
+            str(self.driver),
+            as_dict=True
         )
-        driver_states = [str(s) for s in driver_states]
+        driver_state_values = [str(r.state) for r in driver_states]
 
-        if address_state not in driver_states:
+        if address_state not in driver_state_values:
             frappe.throw(_("Driver does not cover the selected address state."))
