@@ -26,14 +26,9 @@ def get_valid_drivers_for_order(service_id, address_id):
         driver_doc = frappe.get_doc("Drivers", row.driver)
         if driver_doc.disable:
             continue
-        driver_states = [r.state for r in (driver_doc.states or [])]
-        if address_state in driver_states:
+        driver_states = [str(r.state) for r in (driver_doc.states or [])]
+        if str(address_state) in driver_states:
             valid_drivers.append(row.driver)
-
-    frappe.log_error(
-        f"service={service_id} address={address_id} state={address_state} drivers={valid_drivers}",
-        "get_valid_drivers DEBUG"
-    )
 
     return {
         "driver_names": valid_drivers,
@@ -60,7 +55,7 @@ class Order(Document):
             frappe.throw(_("Driver is not assigned to this service."))
 
         driver_doc = frappe.get_doc("Drivers", self.driver)
-        driver_states = [r.state for r in (driver_doc.states or [])]
+        driver_states = [str(r.state) for r in (driver_doc.states or [])]
 
-        if address_state not in driver_states:
+        if str(address_state) not in driver_states:
             frappe.throw(_("Driver does not cover the selected address state."))
