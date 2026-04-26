@@ -36,7 +36,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-15 13:32:01.436284",
+ "modified": "2026-04-26 16:19:48.893011",
  "modified_by": "Administrator",
  "module": "FDS App",
  "name": "Variations",
@@ -58,7 +58,9 @@
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "name_ar"
 }

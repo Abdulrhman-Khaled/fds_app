@@ -20,6 +20,11 @@
   {
    "fieldname": "name_en",
    "fieldtype": "Data",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Name En"
   },
   {
@@ -30,6 +35,11 @@
   {
    "fieldname": "region",
    "fieldtype": "Link",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Region",
    "options": "Region"
   },
@@ -37,13 +47,17 @@
    "default": "0",
    "fieldname": "disable",
    "fieldtype": "Check",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Disable"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-12 17:38:44.363924",
+ "modified": "2026-04-04 01:38:20.238440",
  "modified_by": "Administrator",
  "module": "FDS App",
  "name": "State",
@@ -69,5 +83,8 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "title_field": "name_ar"
+ "title_field": "name_ar",
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
 }

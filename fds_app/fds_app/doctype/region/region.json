@@ -19,6 +19,11 @@
   {
    "fieldname": "name_en",
    "fieldtype": "Data",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Name En"
   },
   {
@@ -30,13 +35,17 @@
    "default": "0",
    "fieldname": "disable",
    "fieldtype": "Check",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Disable"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-12 17:39:08.588466",
+ "modified": "2026-04-04 01:37:10.735322",
  "modified_by": "Administrator",
  "module": "FDS App",
  "name": "Region",

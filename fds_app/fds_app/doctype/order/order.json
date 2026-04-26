@@ -8,25 +8,32 @@
   "order_details_section",
   "column_break_bwrr",
   "customer",
-  "address",
   "customer_first_name",
   "customer_last_name",
   "phone_number",
   "email",
+  "address",
   "column_break_wtph",
   "service_order",
-  "order_date",
   "status",
   "driver",
+  "driver_name",
   "services_details_section",
-  "services",
   "service",
-  "data_lnrd",
+  "order_date",
   "variation",
-  "total_price",
-  "payment_status",
+  "column_break_uiak",
+  "service_name",
+  "data_lnrd",
+  "variation_name",
+  "section_break_ykje",
+  "services",
+  "section_break_ydyp",
   "payment_method",
   "payment_ref",
+  "column_break_obnr",
+  "payment_status",
+  "total_price",
   "order_notes_section",
   "note",
   "column_break_dokc",
@@ -45,14 +52,21 @@
   {
    "fieldname": "customer",
    "fieldtype": "Link",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Customer",
-   "options": "Customer"
+   "options": "Customer",
+   "reqd": 1
   },
   {
    "fieldname": "address",
    "fieldtype": "Link",
    "label": "Address",
-   "options": "Customer Address"
+   "options": "Customer Address",
+   "reqd": 1
   },
   {
    "fetch_from": "address.first_name",
@@ -71,11 +85,22 @@
   {
    "fieldname": "phone_number",
    "fieldtype": "Data",
-   "label": "Phone Number"
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Phone Number",
+   "reqd": 1
   },
   {
    "fieldname": "email",
    "fieldtype": "Data",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Email"
   },
   {
@@ -86,27 +111,40 @@
    "default": "1",
    "fieldname": "service_order",
    "fieldtype": "Check",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Service Order"
   },
   {
+   "depends_on": "eval:doc.service_order == 1",
    "fieldname": "order_date",
    "fieldtype": "Date",
-   "label": "Order Receive Date"
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Order Receive Date",
+   "mandatory_depends_on": "eval:doc.service_order == 1"
   },
   {
    "depends_on": "eval:doc.service_order == 1",
    "fieldname": "variation",
    "fieldtype": "Link",
    "label": "Variation",
+   "mandatory_depends_on": "eval:doc.service_order == 1",
    "options": "Variations"
   },
   {
-   "depends_on": "eval:doc.service_order == 1",
+   "depends_on": "eval:doc.order_date && doc.variation",
    "fieldname": "data_lnrd",
    "fieldtype": "Data",
-   "label": "Time Slot"
+   "label": "Time Slot",
+   "mandatory_depends_on": "eval:doc.service_order == 1"
   },
   {
+   "depends_on": "eval:doc.service_order == 1",
    "fieldname": "services_details_section",
    "fieldtype": "Section Break",
    "label": "Order Services Details"
@@ -116,6 +154,7 @@
    "fieldname": "services",
    "fieldtype": "Table",
    "label": "Items",
+   "mandatory_depends_on": "eval:doc.service_order == 0",
    "options": "Sales Invoice Item"
   },
   {
@@ -123,24 +162,35 @@
    "fieldname": "service",
    "fieldtype": "Link",
    "label": "Service",
+   "mandatory_depends_on": "eval:doc.service_order == 1",
    "options": "Item"
   },
   {
+   "default": "confirmed",
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "confirmed\ncompleted\ncancelled"
+   "options": "confirmed\ncompleted\ncancelled",
+   "reqd": 1
   },
   {
    "fieldname": "total_price",
    "fieldtype": "Float",
-   "label": "Total Price"
+   "label": "Total Price",
+   "read_only": 1
   },
   {
+   "default": "unpaid",
    "fieldname": "payment_status",
    "fieldtype": "Select",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Payment Status",
-   "options": "paid\nunpaid"
+   "options": "paid\nunpaid",
+   "reqd": 1
   },
   {
    "fieldname": "order_notes_section",
@@ -164,11 +214,22 @@
   {
    "fieldname": "payment_method",
    "fieldtype": "Data",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Payment Method"
   },
   {
+   "depends_on": "eval:doc.service",
    "fieldname": "driver",
    "fieldtype": "Link",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Driver",
    "options": "Drivers"
   },
@@ -176,12 +237,52 @@
    "fieldname": "payment_ref",
    "fieldtype": "Data",
    "label": "Payment Ref"
+  },
+  {
+   "depends_on": "eval:doc.service_order == 1",
+   "fetch_from": "service.item_name",
+   "fieldname": "service_name",
+   "fieldtype": "Data",
+   "label": "Service Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_uiak",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_ykje",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_ydyp",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_obnr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.service",
+   "fetch_from": "driver.driver_name",
+   "fieldname": "driver_name",
+   "fieldtype": "Data",
+   "label": "Driver Name",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.service_order == 1",
+   "fetch_from": "variation.name_ar",
+   "fieldname": "variation_name",
+   "fieldtype": "Data",
+   "label": "Variation Name",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-16 13:30:20.926358",
+ "modified": "2026-04-26 16:28:05.992342",
  "modified_by": "Administrator",
  "module": "FDS App",
  "name": "Order",
