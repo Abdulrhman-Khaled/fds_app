@@ -31,7 +31,7 @@ function update_driver_filter(frm) {
 
     // Fetch the state from the selected address and valid drivers for service + state
     frappe.call({
-        method: "fds_app.api.order.get_valid_drivers_for_order",
+        method: "fds_app.fds_app.doctype.order.order.get_valid_drivers_for_order",
         args: { service_id: service, address_id: address },
         callback(r) {
             if (!r.exc && r.message) {
