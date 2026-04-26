@@ -13,6 +13,11 @@
   {
    "fieldname": "driver",
    "fieldtype": "Link",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Driver",
    "options": "Drivers"
   },
@@ -20,6 +25,11 @@
    "fetch_from": "driver.driver_name",
    "fieldname": "driver_name",
    "fieldtype": "Data",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Driver Name"
   }
  ],
@@ -27,7 +37,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-02-22 11:01:54.675481",
+ "modified": "2026-04-21 21:24:42.509485",
  "modified_by": "Administrator",
  "module": "FDS App",
  "name": "Drivers Table",
