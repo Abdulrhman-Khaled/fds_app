@@ -15,9 +15,7 @@ def _is_api_request():
 
 @frappe.whitelist()
 def get_valid_drivers_for_order(service_id, address_id):
-    address_state = frappe.db.get_value("Customer Address", address_id, "state")
-    if not address_state:
-        return {"driver_names": [], "first_driver": None}
+    address_state = frappe.db.get_value("Customer Address", str(address_id), "state")
 
     item_doc = frappe.get_doc("Item", service_id)
 
@@ -29,6 +27,11 @@ def get_valid_drivers_for_order(service_id, address_id):
         driver_states = [str(r.state) for r in (driver_doc.states or [])]
         if str(address_state) in driver_states:
             valid_drivers.append(row.driver)
+
+    frappe.log_error(
+        f"service={service_id} address={address_id} state={address_state} driver_states_per_driver={[(r.driver, [str(s.state) for s in frappe.get_doc('Drivers', r.driver).states]) for r in item_doc.custom_drivers]} valid={valid_drivers}",
+        "get_valid_drivers DEBUG2"
+    )
 
     return {
         "driver_names": valid_drivers,
@@ -47,7 +50,7 @@ class Order(Document):
         if not self.driver or not self.address or not self.service:
             return
 
-        address_state = frappe.db.get_value("Customer Address", self.address, "state")
+        address_state = frappe.db.get_value("Customer Address", str(self.address), "state")
         item_doc = frappe.get_doc("Item", self.service)
         service_drivers = [r.driver for r in (item_doc.custom_drivers or [])]
 
