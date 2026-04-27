@@ -24,7 +24,6 @@ frappe.ui.form.on("Order", {
             });
         }, __("Actions"));
 
-        // --- Create Sales Invoice button (only on saved records) ---
         if (frm.doc.name && !frm.is_new()) {
             frm.add_custom_button(__("Create Sales Invoice"), () => {
                 frappe.confirm(

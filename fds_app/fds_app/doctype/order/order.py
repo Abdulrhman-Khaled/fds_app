@@ -14,7 +14,6 @@ def _is_api_request():
 
 
 def _time_to_ampm(time_str):
-    """Convert 8:00:00 or 08:00:00 to 8:00 AM"""
     if not time_str:
         return ""
     parts = str(time_str).split(":")
@@ -142,6 +141,18 @@ class Order(Document):
         self.calculate_total_price()
         self.validate_driver()
 
+        if self.status == "cancelled":
+            frappe.enqueue(
+                "frappe.client.delete",
+                doctype="Order",
+                name=self.name,
+                enqueue_after_commit=True
+            )
+
+    def after_save(self):
+        if self.status == "cancelled":
+            frappe.delete_doc("Order", self.name, ignore_permissions=True)
+
     def calculate_total_price(self):
         if self.service_order:
             if not self.service or not self.variation or not self.data_lnrd:
@@ -171,8 +182,8 @@ class Order(Document):
         item_doc = frappe.get_doc("Item", self.service)
         service_drivers = [r.driver for r in (item_doc.custom_drivers or [])]
 
-        if self.driver not in service_drivers:
-            frappe.throw(_("Driver is not assigned to this service."))
+        # if self.driver not in service_drivers:
+        #     frappe.throw(_("Driver is not assigned to this service."))
 
         match = frappe.db.exists("States Table", {
             "parent": self.driver,
