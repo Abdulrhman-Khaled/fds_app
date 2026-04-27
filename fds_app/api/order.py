@@ -177,11 +177,11 @@ def create_order(
         primary_service_id = cart_items[0].service
         driver = _find_driver_for_state(primary_service_id, customer_state)
 
-        if not driver:
-            frappe.response["status"] = False
-            frappe.response["message"] = "No available driver for your area"
-            frappe.response["data"] = None
-            return
+        # if not driver:
+        #     frappe.response["status"] = False
+        #     frappe.response["message"] = "No available driver for your area"
+        #     frappe.response["data"] = None
+        #     return
 
         order_fields = {
             "doctype": "Order",
