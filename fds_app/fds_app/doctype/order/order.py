@@ -65,16 +65,14 @@ class Order(Document):
 
     def calculate_total_price(self):
         if self.service_order:
-            # Need service + variation to get price from slots table
-            if not self.service or not self.variation:
+            if not self.service or not self.variation or not self.data_lnrd:
                 return
             item_doc = frappe.get_doc("Item", self.service)
             for row in (item_doc.custom_slots_and_variations_table or []):
-                if str(row.variation) == str(self.variation):
+                if str(row.variation) == str(self.variation) and str(row.time_ampm) == str(self.data_lnrd):
                     self.total_price = row.price
                     return
         else:
-            # Use custom_fixed_price from each item as rate
             total = 0
             for row in (self.services or []):
                 fixed_price = frappe.db.get_value("Item", row.item_code, "custom_fixed_price") or 0
