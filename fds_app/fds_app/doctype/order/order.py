@@ -23,26 +23,15 @@ def get_valid_drivers_for_order(service_id, address_id):
 
     valid_drivers = []
     for row in (item_doc.custom_drivers or []):
-        driver_states = frappe.db.sql(
-            "SELECT state FROM `tabStates Table` WHERE parent = %s AND parentfield = 'states'",
+        # Fetch all columns to see what's actually stored
+        raw = frappe.db.sql(
+            "SELECT * FROM `tabStates Table` WHERE parent = %s AND parentfield = 'states' LIMIT 3",
             str(row.driver),
             as_dict=True
         )
-        driver_state_values = [str(r.state) for r in driver_states]
+        frappe.log_error(str(raw[0] if raw else "NO ROWS"), "states_table_raw")
 
-        frappe.log_error(
-            f"driver={row.driver} | address_state={address_state} | driver_states={driver_state_values}",
-            "driver_debug"
-        )
-
-        is_disabled = frappe.db.get_value("Drivers", row.driver, "disable")
-        if not is_disabled and address_state in driver_state_values:
-            valid_drivers.append(row.driver)
-
-    return {
-        "driver_names": valid_drivers,
-        "first_driver": valid_drivers[0] if valid_drivers else None,
-    }
+    return {"driver_names": [], "first_driver": None}
 
 
 class Order(Document):
