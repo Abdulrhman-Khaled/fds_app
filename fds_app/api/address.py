@@ -152,35 +152,38 @@ def update_customer_address(
             frappe.response["data"] = []
             return
 
+        if primary is not None and int(primary) == 1:
+            frappe.db.sql("""
+                UPDATE `tabCustomer Address`
+                SET primary = 0
+                WHERE customer = %s
+            """, (customer,))
+
         doc = frappe.get_doc("Customer Address", address_id)
-
-        if primary is not None and primary == 1:
-            old_addresses = frappe.get_all(
-                "Customer Address",
-                filters={"customer": customer, "primary": 1},
-                fields=["name"]
-            )
-
-            for addr in old_addresses:
-                frappe.db.set_value("Customer Address", addr.name, "primary", 0)
+        doc.reload()
 
         if first_name is not None:
             doc.first_name = first_name
+
         if last_name is not None:
             doc.last_name = last_name
+
         if region is not None:
             doc.region = region
+
         if state is not None:
             doc.state = state
+
         if address is not None:
             doc.address = address
+
         if primary is not None:
-            doc.primary = primary
+            doc.primary = int(primary)
+
         if lat_lng is not None:
             doc.lat_lng = lat_lng
 
-        doc.reload()
-        doc.save(ignore_permissions=True)
+        doc.save(ignore_permissions=True, ignore_version=True)
         frappe.db.commit()
 
         frappe.response["status"] = True
@@ -190,7 +193,10 @@ def update_customer_address(
         }
 
     except Exception as e:
-        frappe.log_error(message=frappe.get_traceback(), title="Update Customer Address Error")
+        frappe.log_error(
+            message=frappe.get_traceback(),
+            title="Update Customer Address Error"
+        )
         frappe.response["status"] = False
         frappe.response["message"] = f"Server Error: {str(e)}"
         frappe.response["data"] = []
