@@ -72,6 +72,13 @@ frappe.ui.form.on("Order", {
         if (selected && _slot_map[selected] !== undefined) {
             frm.set_value("total_price", _slot_map[selected]);
         }
+        if (selected) {
+            set_time_slot_ampm(frm);
+        }
+    },
+
+    onload: function (frm) {
+        set_time_slot_ampm(frm);
     },
 
     address(frm) {
@@ -111,9 +118,9 @@ frappe.ui.form.on("Sales Invoice Item", {
 
 
 function update_time_slots(frm) {
-    const service   = frm.doc.service;
+    const service = frm.doc.service;
     const variation = frm.doc.variation;
-    const date      = frm.doc.order_date;
+    const date = frm.doc.order_date;
 
     if (!service || !variation || !date) return;
 
@@ -194,4 +201,11 @@ function update_driver_filter(frm) {
             }
         }
     });
+}
+
+function set_time_slot_ampm(frm) {
+    const selected = frm.doc.data_lnrd;
+    if (selected) {
+        frm.set_value("time_slot_ampm", selected);
+    }
 }
