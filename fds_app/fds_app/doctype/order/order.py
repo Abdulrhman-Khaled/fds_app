@@ -30,13 +30,11 @@ def get_valid_drivers_for_order(service_id, address_id):
         is_disabled = frappe.db.get_value("Drivers", row.driver, "disable")
         if is_disabled:
             continue
-
         match = frappe.db.exists("States Table", {
             "parent": row.driver,
             "parentfield": "states",
             "name_en": address_state_name
         })
-
         if match:
             valid_drivers.append(row.driver)
 
@@ -47,12 +45,32 @@ def get_valid_drivers_for_order(service_id, address_id):
 
 
 @frappe.whitelist()
-def get_variation_price(service_id, variation_id):
+def get_available_slots(service_id, variation_id, order_date):
     item_doc = frappe.get_doc("Item", service_id)
+
+    available_slots = []
     for row in (item_doc.custom_slots_and_variations_table or []):
-        if str(row.variation) == str(variation_id):
-            return row.price
-    return 0
+        if str(row.variation) != str(variation_id):
+            continue
+
+        time_slot = f"{row.get('from')} - {row.to}"
+
+        booked = frappe.db.count("Order", {
+            "service": service_id,
+            "variation": variation_id,
+            "data_lnrd": time_slot,
+            "order_date": order_date,
+            "status": ["not in", ["cancelled"]]
+        })
+
+        if booked < (row.max_per_day or 0):
+            available_slots.append({
+                "label": row.time_ampm,
+                "time_slot": time_slot,
+                "price": row.price or 0
+            })
+
+    return available_slots
 
 
 class Order(Document):
@@ -65,11 +83,13 @@ class Order(Document):
 
     def calculate_total_price(self):
         if self.service_order:
+            # Match by variation AND time slot to get the exact row price
             if not self.service or not self.variation or not self.data_lnrd:
                 return
             item_doc = frappe.get_doc("Item", self.service)
             for row in (item_doc.custom_slots_and_variations_table or []):
-                if str(row.variation) == str(self.variation) and str(row.time_ampm) == str(self.data_lnrd):
+                time_slot = f"{row.get('from')} - {row.to}"
+                if str(row.variation) == str(self.variation) and time_slot == self.data_lnrd:
                     self.total_price = row.price
                     return
         else:
@@ -102,28 +122,3 @@ class Order(Document):
 
         if not match:
             frappe.throw(_("Driver does not cover the selected address state."))
-
-
-@frappe.whitelist()
-def get_available_slots(service_id, variation_id, order_date):
-    item_doc = frappe.get_doc("Item", service_id)
-
-    available_slots = []
-    for row in (item_doc.custom_slots_and_variations_table or []):
-        if str(row.variation) != str(variation_id):
-            continue
-
-        time_slot = f"{row.get('from')} - {row.to}"
-
-        booked = frappe.db.count("Order", {
-            "service": service_id,
-            "variation": variation_id,
-            "data_lnrd": time_slot,
-            "order_date": order_date,
-            "status": ["not in", ["cancelled"]]
-        })
-
-        if booked < (row.max_per_day or 0):
-            available_slots.append(row.time_ampm)
-
-    return available_slots
