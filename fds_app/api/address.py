@@ -155,7 +155,7 @@ def update_customer_address(
         if primary is not None and int(primary) == 1:
             frappe.db.sql("""
                 UPDATE `tabCustomer Address`
-                SET primary = 0
+                SET `primary` = 0
                 WHERE customer = %s
             """, (customer,))
 

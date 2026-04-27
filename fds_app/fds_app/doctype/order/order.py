@@ -13,6 +13,23 @@ def _is_api_request():
         return False
 
 
+def _time_to_ampm(time_str):
+    """Convert 8:00:00 or 08:00:00 to 8:00 AM"""
+    if not time_str:
+        return ""
+    parts = str(time_str).split(":")
+    hours = int(parts[0])
+    minutes = parts[1] if len(parts) > 1 else "00"
+    period = "PM" if hours >= 12 else "AM"
+    display_hours = hours % 12 or 12
+    return f"{display_hours}:{minutes} {period}"
+
+
+def _slot_label_from_times(time_from, time_to):
+    """Build the AM/PM label like: 8:00 AM : 12:00 PM"""
+    return f"{_time_to_ampm(time_from)} : {_time_to_ampm(time_to)}"
+
+
 @frappe.whitelist()
 def get_valid_drivers_for_order(service_id, address_id):
     address_state = frappe.db.get_value("Customer Address", str(address_id), "state")
@@ -109,7 +126,6 @@ def create_sales_invoice(order_id):
         "customer": order.customer,
         "company": company,
         "items": items,
-        "custom_order": order_id,
     })
 
     invoice.insert(ignore_permissions=True)

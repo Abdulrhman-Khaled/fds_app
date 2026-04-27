@@ -10,6 +10,7 @@ from frappe.utils import get_files_path, cint
 from frappe.utils.file_manager import save_file
 from frappe.utils import nowdate, nowtime, get_first_day, getdate
 from frappe.auth import LoginManager
+from fds_app.fds_app.doctype.order.order import _slot_label_from_times
 
 def log_error(title, error):
     frappe.log_error(frappe.get_traceback(), title)
@@ -205,10 +206,10 @@ def create_order(
                 "service_order": 1,
                 "variation": cart.variation,
                 "data_lnrd": (
-                        f"{str(cart.time_from)} - {str(cart.time_to)}"
-                        if cart.time_from is not None and cart.time_to is not None
-                        else None
-                    ),
+                    _slot_label_from_times(cart.time_from, cart.time_to)
+                    if cart.time_from is not None and cart.time_to is not None
+                    else None
+                ),
                 "service": cart.service,
             })
         else:

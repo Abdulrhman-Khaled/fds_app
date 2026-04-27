@@ -35,11 +35,7 @@ frappe.ui.form.on("Order", {
                             args: { order_id: frm.doc.name },
                             callback(r) {
                                 if (r.message) {
-                                    frappe.msgprint({
-                                        title: __("Invoice Created"),
-                                        message: __("Sales Invoice {0} created successfully.", [`<a href="/app/sales-invoice/${r.message}">${r.message}</a>`]),
-                                        indicator: "green"
-                                    });
+                                    frappe.set_route("Form", "Sales Invoice", r.message);
                                 }
                             }
                         });
