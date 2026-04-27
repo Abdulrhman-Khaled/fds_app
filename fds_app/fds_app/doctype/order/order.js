@@ -1,13 +1,52 @@
 // Copyright (c) 2026, BodyKh and contributors
 // For license information, please see license.txt
 
-// Store slot data locally to get price when slot is selected
 let _slot_map = {};
 
 frappe.ui.form.on("Order", {
 
     refresh(frm) {
         update_driver_filter(frm);
+
+        // --- Google Maps button ---
+        frm.add_custom_button(__("Open in Google Maps"), () => {
+            if (!frm.doc.address) {
+                frappe.msgprint({ message: __("No address selected."), indicator: "orange" });
+                return;
+            }
+            frappe.db.get_value("Customer Address", frm.doc.address, "lat_lng", (r) => {
+                if (r.lat_lng) {
+                    const [lat, lng] = r.lat_lng.split(",").map(s => s.trim());
+                    window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank");
+                } else {
+                    frappe.msgprint({ message: __("No coordinates saved for this address."), indicator: "orange" });
+                }
+            });
+        }, __("Actions"));
+
+        // --- Create Sales Invoice button (only on saved records) ---
+        if (frm.doc.name && !frm.is_new()) {
+            frm.add_custom_button(__("Create Sales Invoice"), () => {
+                frappe.confirm(
+                    __("Create a Sales Invoice for this order?"),
+                    () => {
+                        frappe.call({
+                            method: "fds_app.fds_app.doctype.order.order.create_sales_invoice",
+                            args: { order_id: frm.doc.name },
+                            callback(r) {
+                                if (r.message) {
+                                    frappe.msgprint({
+                                        title: __("Invoice Created"),
+                                        message: __("Sales Invoice {0} created successfully.", [`<a href="/app/sales-invoice/${r.message}">${r.message}</a>`]),
+                                        indicator: "green"
+                                    });
+                                }
+                            }
+                        });
+                    }
+                );
+            }, __("Actions"));
+        }
     },
 
     service(frm) {
@@ -34,7 +73,6 @@ frappe.ui.form.on("Order", {
     },
 
     data_lnrd(frm) {
-        // Get price for the selected time slot
         const selected = frm.doc.data_lnrd;
         if (selected && _slot_map[selected] !== undefined) {
             frm.set_value("total_price", _slot_map[selected]);
@@ -101,7 +139,6 @@ function update_time_slots(frm) {
                 return;
             }
 
-            // Build slot map: label -> price
             _slot_map = {};
             slots.forEach(s => { _slot_map[s.label] = s.price; });
 

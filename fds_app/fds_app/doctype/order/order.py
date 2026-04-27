@@ -73,6 +73,51 @@ def get_available_slots(service_id, variation_id, order_date):
     return available_slots
 
 
+@frappe.whitelist()
+def create_sales_invoice(order_id):
+    order = frappe.get_doc("Order", order_id)
+
+    company = frappe.defaults.get_global_default("company")
+    income_account = frappe.db.get_value("Company", company, "default_income_account")
+    cost_center = frappe.db.get_value("Company", company, "cost_center")
+
+    items = []
+
+    if order.service_order:
+        item_name = frappe.db.get_value("Item", order.service, "item_name")
+        items.append({
+            "item_code": order.service,
+            "item_name": item_name,
+            "qty": 1,
+            "rate": order.total_price or 0,
+            "income_account": income_account,
+            "cost_center": cost_center,
+        })
+    else:
+        for row in (order.services or []):
+            items.append({
+                "item_code": row.item_code,
+                "item_name": row.item_name,
+                "qty": row.qty or 1,
+                "rate": row.rate or 0,
+                "income_account": income_account,
+                "cost_center": cost_center,
+            })
+
+    invoice = frappe.get_doc({
+        "doctype": "Sales Invoice",
+        "customer": order.customer,
+        "company": company,
+        "items": items,
+        "custom_order": order_id,
+    })
+
+    invoice.insert(ignore_permissions=True)
+    frappe.db.commit()
+
+    return invoice.name
+
+
 class Order(Document):
 
     def validate(self):
@@ -83,7 +128,6 @@ class Order(Document):
 
     def calculate_total_price(self):
         if self.service_order:
-            # Match by variation AND time slot to get the exact row price
             if not self.service or not self.variation or not self.data_lnrd:
                 return
             item_doc = frappe.get_doc("Item", self.service)
