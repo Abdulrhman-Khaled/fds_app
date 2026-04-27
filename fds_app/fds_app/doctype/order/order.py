@@ -104,3 +104,28 @@ class Order(Document):
 
         if not match:
             frappe.throw(_("Driver does not cover the selected address state."))
+
+
+@frappe.whitelist()
+def get_available_slots(service_id, variation_id, order_date):
+    item_doc = frappe.get_doc("Item", service_id)
+
+    available_slots = []
+    for row in (item_doc.custom_slots_and_variations_table or []):
+        if str(row.variation) != str(variation_id):
+            continue
+
+        time_slot = f"{row.get('from')} - {row.to}"
+
+        booked = frappe.db.count("Order", {
+            "service": service_id,
+            "variation": variation_id,
+            "data_lnrd": time_slot,
+            "order_date": order_date,
+            "status": ["not in", ["cancelled"]]
+        })
+
+        if booked < (row.max_per_day or 0):
+            available_slots.append(row.time_ampm)
+
+    return available_slots

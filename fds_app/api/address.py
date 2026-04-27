@@ -179,6 +179,7 @@ def update_customer_address(
         if lat_lng is not None:
             doc.lat_lng = lat_lng
 
+        doc.reload()
         doc.save(ignore_permissions=True)
         frappe.db.commit()
 

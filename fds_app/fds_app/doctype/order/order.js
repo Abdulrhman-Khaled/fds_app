@@ -8,11 +8,21 @@ frappe.ui.form.on("Order", {
     },
 
     service(frm) {
+        frm.set_value("variation", null);
+        frm.set_value("data_lnrd", null);
+        frm.set_value("order_date", null);
         update_driver_filter(frm);
         calculate_total(frm);
     },
 
+    order_date(frm) {
+        frm.set_value("data_lnrd", null);
+        update_time_slots(frm);
+    },
+
     variation(frm) {
+        frm.set_value("data_lnrd", null);
+        update_time_slots(frm);
         calculate_total(frm);
     },
 
@@ -26,7 +36,7 @@ frappe.ui.form.on("Order", {
 
 });
 
-// When a row is added or item_code changes in services table — set rate from custom_fixed_price
+// When a row is added or item_code changes in services table
 frappe.ui.form.on("Sales Invoice Item", {
 
     item_code(frm, cdt, cdn) {
@@ -53,9 +63,43 @@ frappe.ui.form.on("Sales Invoice Item", {
 });
 
 
+function update_time_slots(frm) {
+    const service   = frm.doc.service;
+    const variation = frm.doc.variation;
+    const date      = frm.doc.order_date;
+
+    // Need all three to fetch slots
+    if (!service || !variation || !date) return;
+
+    frappe.call({
+        method: "fds_app.fds_app.doctype.order.order.get_available_slots",
+        args: { service_id: service, variation_id: variation, order_date: date },
+        callback(r) {
+            const slots = r.message || [];
+
+            if (slots.length === 0) {
+                frm.set_value("data_lnrd", null);
+                frappe.msgprint({
+                    title: __("No Available Slots"),
+                    message: __("All slots are fully booked for this variation on the selected date."),
+                    indicator: "orange"
+                });
+                return;
+            }
+
+            // Build select options string for the field
+            const options = slots.join("\n");
+            frm.set_df_property("data_lnrd", "fieldtype", "Select");
+            frm.set_df_property("data_lnrd", "options", options);
+            frm.set_value("data_lnrd", slots[0]);
+            frm.refresh_field("data_lnrd");
+        }
+    });
+}
+
+
 function calculate_total(frm) {
     if (frm.doc.service_order) {
-        // Need service + variation both selected
         if (!frm.doc.service || !frm.doc.variation) {
             frm.set_value("total_price", 0);
             return;
@@ -68,7 +112,6 @@ function calculate_total(frm) {
             }
         });
     } else {
-        // Sum amount from each row (rate already set from custom_fixed_price)
         let total = 0;
         (frm.doc.services || []).forEach(row => {
             total += (row.rate || 0) * (row.qty || 1);
