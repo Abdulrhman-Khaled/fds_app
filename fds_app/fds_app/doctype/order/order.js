@@ -8,7 +8,6 @@ frappe.ui.form.on("Order", {
     refresh(frm) {
         update_driver_filter(frm);
 
-        // --- Google Maps button ---
         frm.add_custom_button(__("Open in Google Maps"), () => {
             if (!frm.doc.address) {
                 frappe.msgprint({ message: __("No address selected."), indicator: "orange" });

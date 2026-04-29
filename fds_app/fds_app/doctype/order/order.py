@@ -25,7 +25,6 @@ def _time_to_ampm(time_str):
 
 
 def _slot_label_from_times(time_from, time_to):
-    """Build the AM/PM label like: 8:00 AM : 12:00 PM"""
     return f"{_time_to_ampm(time_from)} : {_time_to_ampm(time_to)}"
 
 
